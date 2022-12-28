@@ -174,7 +174,7 @@ class Settings(Singleton):
     def microsd_handler(action):
         from seedener.hardware.microsd import MicroSD
         
-        if Settings.HOSTNAME == Settings.SEEDSENER_OS:
+        if Settings.HOSTNAME == Settings.SEEDENER_OS:
         
             if action == MicroSD.ACTION__INSERTED:
                 # restore persistent settings back to defaults

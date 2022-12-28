@@ -188,7 +188,7 @@ class Fonts(Singleton):
         if font_name not in cls.fonts:
             cls.fonts[font_name] = {}
         
-        if font_name in [GUIConstants.ICON_FONT_NAME__FONT_AWESOME, GUIConstants.ICON_FONT_NAME__SEEDSENER]:
+        if font_name in [GUIConstants.ICON_FONT_NAME__FONT_AWESOME, GUIConstants.ICON_FONT_NAME__SEEDENER]:
             file_extension = "otf"
         
         if size not in cls.fonts[font_name]:
