@@ -1,2 +1,3 @@
 from seedener.controller import Controller
-Controller.getInstance().start()
+
+Controller.get_instance().start()

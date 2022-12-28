@@ -18,7 +18,7 @@ class LogoScreen(BaseScreen):
         self.logo = load_image("chia_leaf_green.png")
 
         self.partners = [
-            "hrf",
+            "maximedogawa",
         ]
 
         self.partner_logos: dict = {}
