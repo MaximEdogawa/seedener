@@ -12,7 +12,7 @@ from .singleton import Singleton
 class Settings(Singleton):
     HOSTNAME = os.uname()[1]
     SEEDENER_OS = "seedener-os"
-    SETTINGS_FILENAME = "/mnt/microsd/settings.json" if HOSTNAME == SEEDSENER_OS else "settings.json"
+    SETTINGS_FILENAME = "/mnt/microsd/settings.json" if HOSTNAME == SEEDENER_OS else "settings.json"
         
     @classmethod
     def get_instance(cls):
