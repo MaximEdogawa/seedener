@@ -28,7 +28,7 @@ class GUIConstants:
     REGTEST_COLOR = "#00caf1"
 
     ICON_FONT_NAME__FONT_AWESOME = "Font_Awesome_6_Free-Solid-900"
-    ICON_FONT_NAME__SEEDENER = "seedener-glyphs"
+    ICON_FONT_NAME__SEEDENER = "seedsigner-glyphs"
     ICON_FONT_SIZE = 22
     ICON_INLINE_FONT_SIZE = 24
     ICON_LARGE_BUTTON_SIZE = 36
