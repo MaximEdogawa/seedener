@@ -31,32 +31,20 @@ class SettingsConstants:
         (OPTION__REQUIRED, "Required"),
     ]
 
-    # User-facing selection options
-    COORDINATOR__BLUE_WALLET = "bw"
-    COORDINATOR__NUNCHUK = "nun"
-    COORDINATOR__SPARROW = "spa"
-    COORDINATOR__SPECTER_DESKTOP = "spd"
-    ALL_COORDINATORS = [
-        (COORDINATOR__BLUE_WALLET, "BlueWallet"),
-        (COORDINATOR__NUNCHUK, "Nunchuk"),
-        (COORDINATOR__SPARROW, "Sparrow"),
-        (COORDINATOR__SPECTER_DESKTOP, "Specter Desktop"),
-    ]
-
     LANGUAGE__ENGLISH = "en"
     ALL_LANGUAGES = [
         (LANGUAGE__ENGLISH, "English"),
     ]
 
-    BTC_DENOMINATION__BTC = "btc"
-    BTC_DENOMINATION__SATS = "sats"
-    BTC_DENOMINATION__THRESHOLD = "thr"
-    BTC_DENOMINATION__BTCSATSHYBRID = "hyb"
-    ALL_BTC_DENOMINATIONS = [
-        (BTC_DENOMINATION__BTC, "Btc-only"),
-        (BTC_DENOMINATION__SATS, "Sats-only"),
-        (BTC_DENOMINATION__THRESHOLD, "Threshold at 0.01"),
-        (BTC_DENOMINATION__BTCSATSHYBRID, "Btc | Sats hybrid"),
+    XCH_DENOMINATION__XCH = "XCH"
+    XCH_DENOMINATION__SATS = "sats"
+    XCH_DENOMINATION__THRESHOLD = "thr"
+    XCH_DENOMINATION__XCHSATSHYBRID = "hyb"
+    ALL_XCH_DENOMINATIONS = [
+        (XCH_DENOMINATION__XCH, "XCH-only"),
+        (XCH_DENOMINATION__SATS, "Sats-only"),
+        (XCH_DENOMINATION__THRESHOLD, "Threshold at 0.01"),
+        (XCH_DENOMINATION__XCHSATSHYBRID, "XCH | Sats hybrid"),
     ]
 
     CAMERA_ROTATION__0 = 0
@@ -144,7 +132,7 @@ class SettingsConstants:
     SETTING__WORDLIST_LANGUAGE = "wordlist_language"
     SETTING__PERSISTENT_SETTINGS = "persistent_settings"
     SETTING__COORDINATORS = "coordinators"
-    SETTING__BTC_DENOMINATION = "denomination"
+    SETTING__XCH_DENOMINATION = "denomination"
 
     SETTING__NETWORK = "network"
     SETTING__QR_DENSITY = "qr_density"
@@ -357,19 +345,13 @@ class SettingsDefinition:
                       help_text="Store Settings on SD card.",
                       default_value=SettingsConstants.OPTION__DISABLED),
 
-        SettingsEntry(category=SettingsConstants.CATEGORY__WALLET,
-                      attr_name=SettingsConstants.SETTING__COORDINATORS,
-                      display_name="Coordinator software",
-                      type=SettingsConstants.TYPE__MULTISELECT,
-                      selection_options=SettingsConstants.ALL_COORDINATORS,
-                      default_value=SettingsConstants.ALL_COORDINATORS),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__SYSTEM,
-                      attr_name=SettingsConstants.SETTING__BTC_DENOMINATION,
+                      attr_name=SettingsConstants.SETTING__XCH_DENOMINATION,
                       display_name="Denomination display",
                       type=SettingsConstants.TYPE__SELECT_1,
-                      selection_options=SettingsConstants.ALL_BTC_DENOMINATIONS,
-                      default_value=SettingsConstants.BTC_DENOMINATION__THRESHOLD),
+                      selection_options=SettingsConstants.ALL_XCH_DENOMINATIONS,
+                      default_value=SettingsConstants.XCH_DENOMINATION__THRESHOLD),
      
 
         # Advanced options

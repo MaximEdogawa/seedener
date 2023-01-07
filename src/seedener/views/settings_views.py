@@ -1,5 +1,4 @@
 from seedener.gui.components import FontAwesomeIconConstants, SeedenerCustomIconConstants
-from seedener.models.decode_qr import DecodeQR
 
 from .view import View, Destination, BackStackView, MainMenuView
 

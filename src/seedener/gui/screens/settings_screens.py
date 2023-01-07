@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from PIL.ImageOps import autocontrast
 from typing import List
 from seedener.gui.components import Button, CheckboxButton, CheckedSelectionButton, FontAwesomeIconConstants, Fonts, GUIConstants, Icon, IconButton, IconTextLine, TextArea
-from seedener.gui.screens.scan_screens import ScanScreen
 
 from seedener.gui.screens.screen import BaseScreen, BaseTopNavScreen, ButtonListScreen
 from seedener.hardware.buttons import HardwareButtonsConstants

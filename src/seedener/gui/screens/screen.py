@@ -7,7 +7,6 @@ from seedener.gui.keyboard import Keyboard, TextEntryDisplay
 from seedener.gui.renderer import Renderer
 
 from seedener.models.threads import BaseThread, ThreadsafeCounter
-from seedener.models.encode_qr import EncodeQR
 from seedener.models.settings import Settings, SettingsConstants
 
 from ..components import (FontAwesomeIconConstants, GUIConstants, BaseComponent, Button, Icon, IconButton, LargeIconButton, SeedenerCustomIconConstants, TopNav, TextArea, load_image, ToastOverlay)
@@ -653,81 +652,6 @@ class LargeButtonScreen(BaseTopNavScreen):
 
                 # Write the screen updates
                 self.renderer.show_image()
-
-
-
-@dataclass
-class QRDisplayScreen(BaseScreen):
-    qr_encoder: EncodeQR = None
-
-    class QRDisplayThread(BaseThread):
-        def __init__(self, qr_encoder: EncodeQR, qr_brightness: ThreadsafeCounter, renderer: Renderer):
-            super().__init__()
-            self.qr_encoder = qr_encoder
-            self.qr_brightness = qr_brightness
-            self.renderer = renderer
-
-
-        def run(self):
-            # Loop whether the QR is a single frame or animated; each loop might adjust
-            # brightness setting.
-            while self.keep_running:
-                # convert the self.qr_brightness integer (31-255) into hex triplets
-                hex_color = (hex(self.qr_brightness.cur_count).split('x')[1]) * 3
-                image = self.qr_encoder.next_part_image(240,240, border=2, background_color=hex_color)
-                with self.renderer.lock:
-                    self.renderer.show_image(image)
-
-                # Target n held frames per second before rendering next QR image
-                time.sleep(5/30.0)
-
-
-    def __post_init__(self):
-        from seedener.models.settings import Settings
-        super().__post_init__()
-
-        # Shared coordination var so the display thread can detect success
-        settings = Settings.get_instance()
-        self.qr_brightness = ThreadsafeCounter(initial_value=settings.get_value(SettingsConstants.SETTING__QR_BRIGHTNESS))
-
-        self.threads.append(QRDisplayScreen.QRDisplayThread(
-            qr_encoder=self.qr_encoder,
-            qr_brightness=self.qr_brightness,
-            renderer=self.renderer,
-        ))
-
-
-    def _run(self):
-        from seedener.models.settings import Settings
-
-        while True:
-            user_input = self.hw_inputs.wait_for(
-                [
-                    HardwareButtonsConstants.KEY_UP,
-                    HardwareButtonsConstants.KEY_DOWN,
-                    HardwareButtonsConstants.KEY_LEFT,
-                    HardwareButtonsConstants.KEY_RIGHT,
-                ] + HardwareButtonsConstants.KEYS__ANYCLICK,
-                check_release=True,
-                release_keys=HardwareButtonsConstants.KEYS__ANYCLICK
-            )
-            if user_input == HardwareButtonsConstants.KEY_DOWN:
-                # Reduce QR code background brightness
-                self.qr_brightness.set_value(max(31, self.qr_brightness.cur_count - 31))
-
-            elif user_input == HardwareButtonsConstants.KEY_UP:
-                # Incrase QR code background brightness
-                self.qr_brightness.set_value(min(self.qr_brightness.cur_count + 31, 255))
-
-            else:
-                # Any other input exits the screen
-                self.threads[-1].stop()
-                while self.threads[-1].is_alive():
-                    time.sleep(0.01)
-                break
-
-        Settings.get_instance().set_value(SettingsConstants.SETTING__QR_BRIGHTNESS, self.qr_brightness.cur_count)
-
 
 
 @dataclass

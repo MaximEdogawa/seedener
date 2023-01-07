@@ -122,15 +122,12 @@ class Destination:
 #########################################################################################
 class MainMenuView(View):
     def run(self):
-        from .seed_views import SeedsMenuView
         from .settings_views import SettingsMenuView
-        from .scan_views import ScanView
-        from .tools_views import ToolsMenuView
         from seedener.gui.screens import LargeButtonScreen
         menu_items = [
-            (("Scan", FontAwesomeIconConstants.QRCODE), ScanView),
-            (("Seeds", FontAwesomeIconConstants.KEY), SeedsMenuView),
-            (("Tools", FontAwesomeIconConstants.SCREWDRIVER_WRENCH), ToolsMenuView),
+            (("Settings", FontAwesomeIconConstants.GEAR), SettingsMenuView),
+            (("Settings", FontAwesomeIconConstants.GEAR), SettingsMenuView),
+            (("Settings", FontAwesomeIconConstants.GEAR), SettingsMenuView),
             (("Settings", FontAwesomeIconConstants.GEAR), SettingsMenuView),
         ]
 

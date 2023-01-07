@@ -1,7 +1,7 @@
 import io
 import numpy
 
-from picamera import PiCamera
+from picamera2 import Picamera2
 from PIL import Image
 from seedener.models import Singleton
 from seedener.hardware.pivideostream import PiVideoStream
@@ -56,7 +56,7 @@ class Camera(Singleton):
         if self._picamera is not None:
             self._picamera.close()
 
-        self._picamera = PiCamera(resolution=resolution, framerate=24)
+        self._picamera = Picamera2(resolution=resolution, framerate=24)
         self._picamera.start_preview()
 
 

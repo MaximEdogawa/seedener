@@ -2,8 +2,16 @@ from PIL import Image, ImageDraw, ImageFont
 from threading import Lock
 
 from seedener.gui.components import Fonts, GUIConstants
-from seedener.hardware.ST7789 import ST7789
+import ST7789
 from seedener.models import ConfigurableSingleton
+
+import spidev as SPI
+
+RST = 27
+DC = 25
+BL = 24
+bus = 0 
+device = 0 
 
 
 class Renderer(ConfigurableSingleton):
@@ -25,7 +33,7 @@ class Renderer(ConfigurableSingleton):
         cls._instance = renderer
 
         # Eventually we'll be able to plug in other display controllers
-        renderer.disp = ST7789()
+        renderer.disp = ST7789.ST7789(SPI.SpiDev(bus, device),RST, DC, BL)
         renderer.canvas_width = renderer.disp.width
         renderer.canvas_height = renderer.disp.height
 

@@ -2,7 +2,6 @@ import logging
 import traceback
 import os
 
-from embit.descriptor import Descriptor
 from PIL.Image import Image
 from typing import List
 
@@ -12,7 +11,7 @@ from seedener.hardware.microsd import MicroSD
 from seedener.views.screensaver import ScreensaverScreen
 from seedener.views.view import Destination, NotYetImplementedView, UnhandledExceptionView
 
-from .models import Seed, SeedStorage, Settings, Singleton
+from .models import Settings, Singleton
 
 logger = logging.getLogger(__name__)
 
@@ -31,21 +30,14 @@ class BackStack(List[Destination]):
 class Controller(Singleton):
     VERSION = "0.0.1"
     buttons: HardwareButtons = None
-    tmpStorage: SeedStorage = None
     settings: Settings = None
     renderer: Renderer = None
     unverified_address = None
-
-    multisig_wallet_descriptor: Descriptor = None
 
     image_entropy_preview_frames: List[Image] = None
     image_entropy_final_image: Image = None
 
     address_explorer_data: dict = None
-
-    FLOW__VERIFY_MULTISIG_ADDR = "multisig_addr"
-    FLOW__VERIFY_SINGLESIG_ADDR = "singlesig_addr"
-    FLOW__ADDRESS_EXPLORER = "address_explorer"
     resume_main_flow: str = None
 
     back_stack: BackStack = None
@@ -76,7 +68,6 @@ class Controller(Singleton):
             controller.buttons = HardwareButtons.get_instance()
 
         # models
-        controller.tmpStorage = SeedStorage()
         controller.settings = Settings.get_instance()
         
         controller.microsd = MicroSD.get_instance()
@@ -97,21 +88,6 @@ class Controller(Singleton):
     def camera(self):
         from .hardware.camera import Camera
         return Camera.get_instance()
-
-
-    def get_seed(self, seed_num: int) -> Seed:
-        if seed_num < len(self.tmpStorage.seeds):
-            return self.tmpStorage.seeds[seed_num]
-        else:
-            raise Exception(f"There is no seed_num {seed_num}; only {len(self.tmpStorage.seeds)} in memory.")
-
-
-    def discard_seed(self, seed_num: int):
-        if seed_num < len(self.tmpStorage.seeds):
-            del self.tmpStorage.seeds[seed_num]
-        else:
-            raise Exception(f"There is no seed_num {seed_num}; only {len(self.tmpStorage.seeds)} in memory.")
-
 
     def pop_prev_from_back_stack(self):
         from .views import Destination
@@ -147,7 +123,6 @@ class Controller(Singleton):
                     self.clear_back_stack()
                     # Clear other temp vars
                     self.resume_main_flow = None
-                    self.multisig_wallet_descriptor = None
                     self.unverified_address = None
                     self.address_explorer_data = None
 

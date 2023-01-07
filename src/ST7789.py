@@ -15,6 +15,7 @@ class ST7789(object):
         self._dc = dc
         self._rst = rst
         self._bl = bl
+
         GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
         GPIO.setup(self._dc,GPIO.OUT)
