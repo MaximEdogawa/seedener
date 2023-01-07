@@ -5,7 +5,7 @@ import time
 from seedener.models.singleton import Singleton
 
 class HardwareButtons(Singleton):
-    if GPIO.RPI_INFO['P1_REVISION'] == 3: #This indicates that we have revision 3 GPIO
+    if GPIO.RPI_INFO['P1_REVISION'] == 0: #This indicates that we have revision 3 GPIO
         print("Detected 40pin GPIO (Rasbperry Pi 2 and above)")
         KEY_UP_PIN = 31
         KEY_DOWN_PIN = 35
@@ -35,8 +35,8 @@ class HardwareButtons(Singleton):
         if cls._instance is None:
             cls._instance = cls.__new__(cls)
 
-            #init GPIO
-            GPIO.setmode(GPIO.BOARD)
+            print("#init GPIO")
+            GPIO.setmode(GPIO.BCM)
             GPIO.setup(HardwareButtons.KEY_UP_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)    # Input with pull-up
             GPIO.setup(HardwareButtons.KEY_DOWN_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Input with pull-up
             GPIO.setup(HardwareButtons.KEY_LEFT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Input with pull-up
@@ -178,7 +178,7 @@ class HardwareButtons(Singleton):
 # TODO: Implement `release_lock` functionality as a global somewhere. Mixes up design
 #   patterns to have a static constants class plus a settable global value.
 class HardwareButtonsConstants:
-    if GPIO.RPI_INFO['P1_REVISION'] == 3: #This indicates that we have revision 3 GPIO
+    if GPIO.RPI_INFO['P1_REVISION'] == 0: #This indicates that we have revision 3 GPIO
         KEY_UP = 31
         KEY_DOWN = 35
         KEY_LEFT = 29
