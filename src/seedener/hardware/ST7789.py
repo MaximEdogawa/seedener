@@ -18,7 +18,13 @@ class ST7789(object):
         self._rst = 27
         self._bl = 18
 
-        GPIO.setmode(GPIO.BCM)
+        if GPIO.RPI_INFO['P1_REVISION'] == 0: 
+            GPIO.setmode(GPIO.BCM)
+        elif GPIO.RPI_INFO['TYPE'] == "Zero":
+            GPIO.setmode(GPIO.BOARD)
+        else:
+            GPIO.setmode(GPIO.BCM)
+
         GPIO.setwarnings(False)
         GPIO.setup(self._dc,GPIO.OUT)
         GPIO.setup(self._rst,GPIO.OUT)
