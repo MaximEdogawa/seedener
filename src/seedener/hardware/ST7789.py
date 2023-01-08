@@ -14,14 +14,9 @@ class ST7789(object):
         self.height = 240
 
         #Initialize DC RST pin
-        if GPIO.RPI_INFO['P1_REVISION'] == 0: 
-            self._dc = 25
-            self._rst = 27
-            self._bl = 18
-        else:
-            self._dc = 22
-            self._rst = 13
-            self._bl = 18
+        self._dc = 25
+        self._rst = 27
+        self._bl = 18
 
         GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
@@ -36,7 +31,7 @@ class ST7789(object):
         self.init()
 
 
-     """    Write register address and data     """
+    """    Write register address and data     """
     def command(self, cmd):
         GPIO.output(self._dc, GPIO.LOW)
         self._spi.writebytes([cmd])
