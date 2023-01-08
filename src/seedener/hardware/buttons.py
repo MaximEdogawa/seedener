@@ -16,7 +16,6 @@ class HardwareButtons(Singleton):
         KEY1_PIN       = 21
         KEY2_PIN       = 20
         KEY3_PIN       = 16
-
     elif GPIO.RPI_INFO['P1_REVISION'] == 3: #This indicates that we have revision 3 GPIO
         print("Detected 40pin GPIO (Rasbperry Pi 2 and above)")
         KEY_UP_PIN = 31
