@@ -13,16 +13,23 @@ class ST7789(object):
         self.width = 240
         self.height = 240
 
+        
         #Initialize DC RST pin
-        self._dc = 25
-        self._rst = 27
-        self._bl = 18
-
         if GPIO.RPI_INFO['P1_REVISION'] == 0: 
+            self._dc = 25
+            self._rst = 27
+            self._bl = 18
             GPIO.setmode(GPIO.BCM)
+
         elif GPIO.RPI_INFO['TYPE'] == "Zero":
+            self._dc = 22
+            self._rst = 13
+            self._bl = 18
             GPIO.setmode(GPIO.BOARD)
         else:
+            self._dc = 25
+            self._rst = 27
+            self._bl = 18
             GPIO.setmode(GPIO.BCM)
 
         GPIO.setwarnings(False)
