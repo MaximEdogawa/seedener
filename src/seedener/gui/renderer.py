@@ -2,14 +2,25 @@ from PIL import Image, ImageDraw, ImageFont
 from threading import Lock
 
 from seedener.gui.components import Fonts, GUIConstants
-import ST7789
+import seedener.hardware.ST7789
 from seedener.models import ConfigurableSingleton
 
 import spidev as SPI
+import RPi.GPIO as GPIO
 
-RST = 27
-DC = 25
-BL = 24
+
+#Initialize DC RST pin
+if GPIO.RPI_INFO['P1_REVISION'] == 0:
+    print("RST, DC, BL Version Compute module")
+    RST = 27
+    DC = 25
+    BL = 24
+else:
+    print("RST, DC, BL Version default")
+    RST = 22
+    DC = 13
+    BL = 18
+
 bus = 0 
 device = 0 
 
@@ -33,7 +44,7 @@ class Renderer(ConfigurableSingleton):
         cls._instance = renderer
 
         # Eventually we'll be able to plug in other display controllers
-        renderer.disp = ST7789.ST7789(SPI.SpiDev(bus, device),RST, DC, BL)
+        renderer.disp = seedener.hardware.ST7789.ST7789(SPI.SpiDev(bus, device),RST, DC, BL)
         renderer.canvas_width = renderer.disp.width
         renderer.canvas_height = renderer.disp.height
 
