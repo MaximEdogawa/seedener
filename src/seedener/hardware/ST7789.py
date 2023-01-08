@@ -2,28 +2,47 @@ import spidev
 import RPi.GPIO as GPIO
 import time
 import numpy as np
+import spidev as SPI
+
 
 
 class ST7789(object):
     """class for ST7789  240*240 1.3inch OLED displays."""
 
-    def __init__(self,spi,rst,dc,bl):
+    def __init__(self):
         self.width = 240
         self.height = 240
 
+        
         #Initialize DC RST pin
-        self._dc = dc
-        self._rst = rst
-        self._bl = bl
-        GPIO.setmode(GPIO.BCM)
+        if GPIO.RPI_INFO['P1_REVISION'] == 0: 
+            self._dc = 25
+            self._rst = 27
+            self._bl = 18
+            GPIO.setmode(GPIO.BCM)
+
+        elif GPIO.RPI_INFO['TYPE'] == "Zero":
+            self._dc = 22
+            self._rst = 13
+            self._bl = 18
+            GPIO.setmode(GPIO.BOARD)
+        else:
+            self._dc = 25
+            self._rst = 27
+            self._bl = 18
+            GPIO.setmode(GPIO.BCM)
+
         GPIO.setwarnings(False)
         GPIO.setup(self._dc,GPIO.OUT)
         GPIO.setup(self._rst,GPIO.OUT)
         GPIO.setup(self._bl,GPIO.OUT)
         GPIO.output(self._bl, GPIO.HIGH)
         #Initialize SPI
-        self._spi = spi
+        self._spi = spidev.SpiDev(0, 0)
         self._spi.max_speed_hz = 40000000
+
+        self.init()
+
 
     """    Write register address and data     """
     def command(self, cmd):
@@ -34,14 +53,12 @@ class ST7789(object):
         GPIO.output(self._dc, GPIO.HIGH)
         self._spi.writebytes([val])
 
-    def Init(self):
+    def init(self):
         """Initialize dispaly"""    
         self.reset()
 
-        self.command(0x11) 
-        time.sleep(1.2)
         self.command(0x36)
-        self.data(0X70)
+        self.data(0x70)                 
 
         self.command(0x3A) 
         self.data(0x05)
@@ -51,13 +68,13 @@ class ST7789(object):
         self.data(0x0C)
         self.data(0x00)
         self.data(0x33)
-        self.data(0x33) 
+        self.data(0x33)
 
-        self.command(0xB7) 
-        self.data(0x35)  
+        self.command(0xB7)
+        self.data(0x35) 
 
         self.command(0xBB)
-        self.data(0x37)
+        self.data(0x19)
 
         self.command(0xC0)
         self.data(0x2C)
@@ -69,12 +86,12 @@ class ST7789(object):
         self.data(0x12)   
 
         self.command(0xC4)
-        self.data(0x20)  
+        self.data(0x20)
 
-        self.command(0xC6) 
-        self.data(0x0F)    
+        self.command(0xC6)
+        self.data(0x0F) 
 
-        self.command(0xD0) 
+        self.command(0xD0)
         self.data(0xA4)
         self.data(0xA1)
 
@@ -109,8 +126,10 @@ class ST7789(object):
         self.data(0x1F)
         self.data(0x20)
         self.data(0x23)
+        
+        self.command(0x21)
 
-        self.command(0x21) 
+        self.command(0x11)
 
         self.command(0x29)
 

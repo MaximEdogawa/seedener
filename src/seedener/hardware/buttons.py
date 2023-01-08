@@ -5,8 +5,8 @@ import time
 from seedener.models.singleton import Singleton
 
 class HardwareButtons(Singleton):
-    if GPIO.RPI_INFO['P1_REVISION'] == 0: #This indicates that we have revision 3 GPIO
-        print(GPIO.RPI_INFO)
+    if GPIO.RPI_INFO['P1_REVISION'] == 0: 
+        print("Detected 40pin GPIO (Raspberry pi compute modul 4)")
         KEY_UP_PIN     = 6 
         KEY_DOWN_PIN   = 19
         KEY_LEFT_PIN   = 5
@@ -16,7 +16,17 @@ class HardwareButtons(Singleton):
         KEY1_PIN       = 21
         KEY2_PIN       = 20
         KEY3_PIN       = 16
+    elif GPIO.RPI_INFO['P1_REVISION'] == 3: #This indicates that we have revision 3 GPIO
+        print("Detected 40pin GPIO (Rasbperry Pi 2 and above)")
+        KEY_UP_PIN = 31
+        KEY_DOWN_PIN = 35
+        KEY_LEFT_PIN = 29
+        KEY_RIGHT_PIN = 37
+        KEY_PRESS_PIN = 33
 
+        KEY1_PIN = 40
+        KEY2_PIN = 38
+        KEY3_PIN = 36
     else:
         print("Assuming 26 Pin GPIO (Raspberry P1 1)")
         KEY_UP_PIN = 5
@@ -36,7 +46,13 @@ class HardwareButtons(Singleton):
             cls._instance = cls.__new__(cls)
 
             print("#init GPIO")
-            GPIO.setmode(GPIO.BCM)
+            if GPIO.RPI_INFO['P1_REVISION'] == 0: 
+                GPIO.setmode(GPIO.BCM)
+            elif GPIO.RPI_INFO['TYPE'] == "Zero":
+                GPIO.setmode(GPIO.BOARD)
+            else:
+                GPIO.setmode(GPIO.BCM)
+                
             GPIO.setup(HardwareButtons.KEY_UP_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)    # Input with pull-up
             GPIO.setup(HardwareButtons.KEY_DOWN_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Input with pull-up
             GPIO.setup(HardwareButtons.KEY_LEFT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Input with pull-up
@@ -179,7 +195,6 @@ class HardwareButtons(Singleton):
 #   patterns to have a static constants class plus a settable global value.
 class HardwareButtonsConstants:
     if GPIO.RPI_INFO['P1_REVISION'] == 0: #This indicates that we have revision 3 GPIO
-        print("gpio p1_version 0")
         KEY_UP     = 6 
         KEY_DOWN   = 19
         KEY_LEFT   = 5
@@ -189,6 +204,16 @@ class HardwareButtonsConstants:
         KEY1       = 21
         KEY2       = 20
         KEY3       = 16
+    elif GPIO.RPI_INFO['P1_REVISION'] == 3:
+        KEY_UP = 31
+        KEY_DOWN = 35
+        KEY_LEFT = 29
+        KEY_RIGHT = 37
+        KEY_PRESS = 33
+
+        KEY1 = 40
+        KEY2 = 38
+        KEY3 = 36
     else:
         KEY_UP = 5
         KEY_DOWN = 11

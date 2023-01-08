@@ -1,13 +1,16 @@
 import io
 import numpy
+import RPi.GPIO as GPIO
 
-from picamera2 import Picamera2
 from PIL import Image
 from seedener.models import Singleton
 from seedener.hardware.pivideostream import PiVideoStream
 from seedener.models.settings import SettingsConstants
 
-
+if GPIO.RPI_INFO['P1_REVISION'] == 3:
+	from picamera import PiCamera as picamera
+else:
+	from picamera2 import Picamera2 as picamera
 
 class Camera(Singleton):
     _video_stream = None
@@ -56,7 +59,7 @@ class Camera(Singleton):
         if self._picamera is not None:
             self._picamera.close()
 
-        self._picamera = Picamera2(resolution=resolution, framerate=24)
+        self._picamera = picamera(resolution=resolution, framerate=24)
         self._picamera.start_preview()
 
 
