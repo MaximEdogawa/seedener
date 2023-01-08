@@ -206,9 +206,9 @@ class HardwareButtonsConstants:
         KEY_RIGHT = 37
         KEY_PRESS = 33
 
-        KEY1_PIN = 40
-        KEY2_PIN = 38
-        KEY3_PIN = 36
+        KEY1 = 40
+        KEY2 = 38
+        KEY3 = 36
     else:
         KEY_UP = 5
         KEY_DOWN = 11
