@@ -46,7 +46,13 @@ class HardwareButtons(Singleton):
             cls._instance = cls.__new__(cls)
 
             print("#init GPIO")
-            GPIO.setmode(GPIO.BCM)
+            if GPIO.RPI_INFO['P1_REVISION'] == 0: 
+                GPIO.setmode(GPIO.BCM)
+            elif GPIO.RPI_INFO['TYPE'] == "Zero":
+                GPIO.setmode(GPIO.BOARD)
+            else:
+                GPIO.setmode(GPIO.BCM)
+                
             GPIO.setup(HardwareButtons.KEY_UP_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)    # Input with pull-up
             GPIO.setup(HardwareButtons.KEY_DOWN_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Input with pull-up
             GPIO.setup(HardwareButtons.KEY_LEFT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Input with pull-up
