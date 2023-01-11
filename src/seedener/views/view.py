@@ -7,7 +7,6 @@ from seedener.gui.screens.screen import RET_CODE__BACK_BUTTON, DireWarningScreen
 from seedener.models.threads import BaseThread
 from seedener.models import Settings
 
-
 class BackStackView:
     """
         Empty class that just signals to the Controller to pop the most recent View off
@@ -123,8 +122,8 @@ class Destination:
 class MainMenuView(View):
     def run(self):
         from .scan_views import ScanView 
-        from .keys_views import KeysMenuView 
-        from .tools_views import ToolsView
+        from .key_views import KeysMenuView 
+        from .tools_views import ToolsMenuView
         from .settings_views import SettingsMenuView
         
 
@@ -132,7 +131,7 @@ class MainMenuView(View):
         menu_items = [
             (("Scan", FontAwesomeIconConstants.QRCODE), ScanView),
             (("Keys", FontAwesomeIconConstants.KEY), KeysMenuView),
-            (("Tools", FontAwesomeIconConstants.SCREWDRIVER_WRENCH), ToolsView),
+            (("Tools", FontAwesomeIconConstants.SCREWDRIVER_WRENCH), ToolsMenuView),
             (("Settings", FontAwesomeIconConstants.GEAR), SettingsMenuView),
         ]
 

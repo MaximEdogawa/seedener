@@ -8,7 +8,7 @@ class KeyStorage:
         self.pending_key: Key = None
     
     def set_pending_key(self, key: Key):
-        self.pending_key =key
+        self.pending_key = key
 
     def get_pending_key(self) -> Key:
         return self.pending_key

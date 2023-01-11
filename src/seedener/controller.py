@@ -38,7 +38,6 @@ class Controller(Singleton):
     image_entropy_preview_frames: List[Image] = None
     image_entropy_final_image: Image = None
 
-    address_explorer_data: dict = None
     resume_main_flow: str = None
 
     back_stack: BackStack = None
