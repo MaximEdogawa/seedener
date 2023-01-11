@@ -15,12 +15,10 @@ class InvalidKeyException(Exception):
 class Key:
     def __init__(self, passphrase: str = "") -> None:
         self._passphrase: str = ""
-        self.set_passphrase(passphrase, regenerate_key=False)
-
         self.key_bytes_hash: bytes = None
         self.priv_key: str = ""
         self.pub_key: str = ""
-
+        self.set_passphrase(passphrase, paswordProtect=False)
         self._generate_key()
         
         
@@ -29,21 +27,14 @@ class Key:
             self.priv_key = subprocess.Popen(HSMGEN, shell = True, stdout=subprocess.PIPE).stdout.read().decode()
             commadPubGen = HSMPK + " " + self.priv_key
             self.pub_key = subprocess.Popen(commadPubGen, shell = True, stdout=subprocess.PIPE).stdout.read().decode()        
-            self.key_bytes_hash = hashlib.pbkdf2_hmac(
-                "sha512",
-                self.priv_key.encode("utf-8"),
-                self._passphrase.encode("utf-8"),
-                PBKDF2_ROUNDS,
-                64,
-            )
         except Exception as e:
             print(repr(e))
             raise InvalidKeyException(repr(e))
     
-    def get_private(self, passphrase: str = ""):
+    def get_private_protected(self, passphrase: str = ""):
         check_hash = hashlib.pbkdf2_hmac(
                 "sha512",
-                self.pri_key.encode("utf-8"),
+                self.priv_key.encode("utf-8"),
                 passphrase.encode("utf-8"),
                 PBKDF2_ROUNDS,
                 64,
@@ -52,6 +43,10 @@ class Key:
             return self.priv_key
         else:
             return "Passphrase does not Match!"
+
+    #TODO:Open for Review how to manage private key
+    def get_private(self):
+        return self.priv_key
 
     def get_pub(self):
         return self.pub_key
@@ -95,5 +90,5 @@ class Key:
     ### override operators    
     def __eq__(self, other):
         if isinstance(other, Key):
-            return self.key_bytes == other.key_bytes
+            return self.priv_key == other.priv_key
         return False

@@ -1,4 +1,5 @@
 import time
+from textwrap import wrap
 
 from seedener.gui.components import FontAwesomeIconConstants, SeedenerCustomIconConstants
 
@@ -71,17 +72,11 @@ class ToolsCreateKeyEntryView(View):
 
         if ret == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
-
-        self.loading_screen = LoadingScreenThread(text="Calculating addrs...")
-        self.loading_screen.start()
+        key = Key()
+        substrings = wrap(key.get_private(), 7) 
+        print(key.get_private())
+        print(substrings)   
+        self.controller.inMemoryStore.set_pending_key(key)
         
-        # Error Creating Key need more work
-
-        # Add in-memory Key
-        for x in range(0, self.total_keys):
-            key = Key()
-            self.controller.inMemoryStore.set_pending_key(key)
-        
-        self.loading_screen.start()
         # Cannot return BACK to this View
         return Destination(KeyWarningView, view_args={"key_num": None}, clear_history=True)
