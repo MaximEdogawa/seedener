@@ -90,7 +90,7 @@ class Keyboard:
     }
 
     @dataclass
-    class Key:
+    class Switch:
         """
             Simple python3.x dataclass (akin to a strut) to store info about each
             individual key in the keyboard and its state. Attrs with defaults must be
@@ -233,7 +233,7 @@ class Keyboard:
                     is_selected = True
                     self.selected_key["y"] = i
                     self.selected_key["x"] = cur_index_x
-                cur_row.append(self.Key(
+                cur_row.append(self.Switch(
                     letter=letter,
                     screen_x=cur_x,
                     screen_y=cur_y,
@@ -251,7 +251,7 @@ class Keyboard:
             else:
                 # It's the last row; add the additional keys at the end
                 for additional_key in additional_keys:
-                    self.keys[-1].append(self.Key(
+                    self.keys[-1].append(self.Switch(
                         letter=additional_key["letter"],
                         code=additional_key["code"],
                         screen_x=cur_x,

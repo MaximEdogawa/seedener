@@ -36,10 +36,8 @@ class ToolsMenuView(View):
 class ToolsCreateKeyView(View):
     def run(self):
         ONE = "Generate 1 Key"
-        TWO = "Generate 2 Keys"
-        FIVE = "Generate 5 Keys"
         
-        button_data = [ONE, TWO, FIVE]
+        button_data = [ONE]
         selected_menu_num = ButtonListScreen(
             title="Keys to Generate",
             is_bottom_list=True,
@@ -52,12 +50,6 @@ class ToolsCreateKeyView(View):
 
         elif button_data[selected_menu_num] == ONE:
             return Destination(ToolsCreateKeyEntryView, view_args=dict(total_keys=1))
-
-        elif button_data[selected_menu_num] == TWO:
-            return Destination(ToolsCreateKeyEntryView, view_args=dict(total_keys=2))
-
-        elif button_data[selected_menu_num] == FIVE:
-            return Destination(ToolsCreateKeyEntryView, view_args=dict(total_keys=5))
 
 class ToolsCreateKeyEntryView(View):
     def __init__(self, total_keys: int):
@@ -73,9 +65,6 @@ class ToolsCreateKeyEntryView(View):
         if ret == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
         key = Key()
-        substrings = wrap(key.get_private(), 7) 
-        print(key.get_private())
-        print(substrings)   
         self.controller.inMemoryStore.set_pending_key(key)
         
         # Cannot return BACK to this View

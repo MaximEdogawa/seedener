@@ -12,6 +12,8 @@ from ..components import (Button, FontAwesomeIconConstants, Fonts, FormattedAddr
     IconTextLine, SeedenerCustomIconConstants, TextArea, GUIConstants,
     calc_text_centering)
 from seedener.gui.keyboard import Keyboard, TextEntryDisplay
+from seedener.hardware.buttons import HardwareButtons, HardwareButtonsConstants
+
 
 @dataclass
 class KeyOptionsScreen(ButtonListScreen):
@@ -315,6 +317,201 @@ class KeyAddPassphraseScreen(BaseTopNavScreen):
             screen_x=hw_button_x,
             screen_y=hw_button_y + 3*GUIConstants.COMPONENT_PADDING + GUIConstants.BUTTON_HEIGHT,
         )
+
+
+    def _render(self):
+        super()._render()
+
+        self.text_entry_display.render()
+        self.hw_button1.render()
+        self.hw_button2.render()
+        self.hw_button3.render()
+        self.keyboard_abc.render_keys()
+
+        self.renderer.show_image()
+
+
+    def _run(self):
+        cursor_position = len(self.passphrase)
+
+        cur_keyboard = self.keyboard_abc
+        cur_button1_text = self.KEYBOARD__UPPERCASE_BUTTON_TEXT
+        cur_button2_text = self.KEYBOARD__DIGITS_BUTTON_TEXT
+
+        # Start the interactive update loop
+        while True:
+            input = self.hw_inputs.wait_for(
+                HardwareButtonsConstants.ALL_KEYS,
+                check_release=True,
+                release_keys=[HardwareButtonsConstants.KEY_PRESS, HardwareButtonsConstants.KEY1, HardwareButtonsConstants.KEY2, HardwareButtonsConstants.KEY3]
+            )
+
+            keyboard_swap = False
+
+            # Check our two possible exit conditions
+            if input == HardwareButtonsConstants.KEY3:
+                # Save!
+                # First light up key3
+                self.hw_button3.is_selected = True
+                self.hw_button3.render()
+                self.renderer.show_image()
+
+                if len(self.passphrase) > 0:
+                    return self.passphrase.strip()
+
+            elif input == HardwareButtonsConstants.KEY_PRESS and self.top_nav.is_selected:
+                # Back button clicked
+                return self.top_nav.selected_button
+
+            # Check for keyboard swaps
+            if input == HardwareButtonsConstants.KEY1:
+                # First light up key1
+                self.hw_button1.is_selected = True
+                self.hw_button1.render()
+
+                # Return to the same button2 keyboard, if applicable
+                if cur_keyboard == self.keyboard_digits:
+                    cur_button2_text = self.KEYBOARD__DIGITS_BUTTON_TEXT
+                elif cur_keyboard == self.keyboard_symbols_1:
+                    cur_button2_text = self.KEYBOARD__SYMBOLS_1_BUTTON_TEXT
+                elif cur_keyboard == self.keyboard_symbols_2:
+                    cur_button2_text = self.KEYBOARD__SYMBOLS_2_BUTTON_TEXT
+
+                if cur_button1_text == self.KEYBOARD__LOWERCASE_BUTTON_TEXT:
+                    self.keyboard_abc.set_selected_key_indices(x=cur_keyboard.selected_key["x"], y=cur_keyboard.selected_key["y"])
+                    cur_keyboard = self.keyboard_abc
+                    cur_button1_text = self.KEYBOARD__UPPERCASE_BUTTON_TEXT
+                else:
+                    self.keyboard_ABC.set_selected_key_indices(x=cur_keyboard.selected_key["x"], y=cur_keyboard.selected_key["y"])
+                    cur_keyboard = self.keyboard_ABC
+                    cur_button1_text = self.KEYBOARD__LOWERCASE_BUTTON_TEXT
+                cur_keyboard.render_keys()
+
+                # Show the changes; this loop will have two renders
+                self.renderer.show_image()
+
+                keyboard_swap = True
+                ret_val = None
+
+            elif input == HardwareButtonsConstants.KEY2:
+                # First light up key2
+                self.hw_button2.is_selected = True
+                self.hw_button2.render()
+                self.renderer.show_image()
+
+                # And reset for next redraw
+                self.hw_button2.is_selected = False
+
+                # Return to the same button1 keyboard, if applicable
+                if cur_keyboard == self.keyboard_abc:
+                    cur_button1_text = self.KEYBOARD__LOWERCASE_BUTTON_TEXT
+                elif cur_keyboard == self.keyboard_ABC:
+                    cur_button1_text = self.KEYBOARD__UPPERCASE_BUTTON_TEXT
+
+                if cur_button2_text == self.KEYBOARD__DIGITS_BUTTON_TEXT:
+                    self.keyboard_digits.set_selected_key_indices(x=cur_keyboard.selected_key["x"], y=cur_keyboard.selected_key["y"])
+                    cur_keyboard = self.keyboard_digits
+                    cur_keyboard.render_keys()
+                    cur_button2_text = self.KEYBOARD__SYMBOLS_1_BUTTON_TEXT
+                elif cur_button2_text == self.KEYBOARD__SYMBOLS_1_BUTTON_TEXT:
+                    self.keyboard_symbols_1.set_selected_key_indices(x=cur_keyboard.selected_key["x"], y=cur_keyboard.selected_key["y"])
+                    cur_keyboard = self.keyboard_symbols_1
+                    cur_keyboard.render_keys()
+                    cur_button2_text = self.KEYBOARD__SYMBOLS_2_BUTTON_TEXT
+                elif cur_button2_text == self.KEYBOARD__SYMBOLS_2_BUTTON_TEXT:
+                    self.keyboard_symbols_2.set_selected_key_indices(x=cur_keyboard.selected_key["x"], y=cur_keyboard.selected_key["y"])
+                    cur_keyboard = self.keyboard_symbols_2
+                    cur_keyboard.render_keys()
+                    cur_button2_text = self.KEYBOARD__DIGITS_BUTTON_TEXT
+                cur_keyboard.render_keys()
+
+                # Show the changes; this loop will have two renders
+                self.renderer.show_image()
+
+                keyboard_swap = True
+                ret_val = None
+
+            else:
+                # Process normal input
+                if input in [HardwareButtonsConstants.KEY_UP, HardwareButtonsConstants.KEY_DOWN] and self.top_nav.is_selected:
+                    # We're navigating off the previous button
+                    self.top_nav.is_selected = False
+                    self.top_nav.render_buttons()
+
+                    # Override the actual input w/an ENTER signal for the Keyboard
+                    if input == HardwareButtonsConstants.KEY_DOWN:
+                        input = Keyboard.ENTER_TOP
+                    else:
+                        input = Keyboard.ENTER_BOTTOM
+                elif input in [HardwareButtonsConstants.KEY_LEFT, HardwareButtonsConstants.KEY_RIGHT] and self.top_nav.is_selected:
+                    # ignore
+                    continue
+
+                ret_val = cur_keyboard.update_from_input(input)
+
+            # Now process the result from the keyboard
+            if ret_val in Keyboard.EXIT_DIRECTIONS:
+                self.top_nav.is_selected = True
+                self.top_nav.render_buttons()
+
+            elif ret_val in Keyboard.ADDITIONAL_KEYS and input == HardwareButtonsConstants.KEY_PRESS:
+                if ret_val == Keyboard.KEY_BACKSPACE["code"]:
+                    if cursor_position == 0:
+                        pass
+                    elif cursor_position == len(self.passphrase):
+                        self.passphrase = self.passphrase[:-1]
+                    else:
+                        self.passphrase = self.passphrase[:cursor_position - 1] + self.passphrase[cursor_position:]
+
+                    cursor_position -= 1
+
+                elif ret_val == Keyboard.KEY_CURSOR_LEFT["code"]:
+                    cursor_position -= 1
+                    if cursor_position < 0:
+                        cursor_position = 0
+
+                elif ret_val == Keyboard.KEY_CURSOR_RIGHT["code"]:
+                    cursor_position += 1
+                    if cursor_position > len(self.passphrase):
+                        cursor_position = len(self.passphrase)
+
+                elif ret_val == Keyboard.KEY_SPACE["code"]:
+                    if cursor_position == len(self.passphrase):
+                        self.passphrase += " "
+                    else:
+                        self.passphrase = self.passphrase[:cursor_position] + " " + self.passphrase[cursor_position:]
+                    cursor_position += 1
+
+                # Update the text entry display and cursor
+                self.text_entry_display.render(self.passphrase, cursor_position)
+
+            elif input == HardwareButtonsConstants.KEY_PRESS and ret_val not in Keyboard.ADDITIONAL_KEYS:
+                # User has locked in the current letter
+                if cursor_position == len(self.passphrase):
+                    self.passphrase += ret_val
+                else:
+                    self.passphrase = self.passphrase[:cursor_position] + ret_val + self.passphrase[cursor_position:]
+                cursor_position += 1
+
+                # Update the text entry display and cursor
+                self.text_entry_display.render(self.passphrase, cursor_position)
+
+            elif input in HardwareButtonsConstants.KEYS__LEFT_RIGHT_UP_DOWN or keyboard_swap:
+                # Live joystick movement; haven't locked this new letter in yet.
+                # Leave current spot blank for now. Only update the active keyboard keys
+                # when a selection has been locked in (KEY_PRESS) or removed ("del").
+                pass
+        
+            if keyboard_swap:
+                # Show the hw buttons' updated text and not active state
+                self.hw_button1.text = cur_button1_text
+                self.hw_button2.text = cur_button2_text                
+                self.hw_button1.is_selected = False
+                self.hw_button2.is_selected = False
+                self.hw_button1.render()
+                self.hw_button2.render()
+
+            self.renderer.show_image()
 
 @dataclass
 class KeyReviewPassphraseScreen(ButtonListScreen):

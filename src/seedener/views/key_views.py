@@ -415,8 +415,6 @@ class KeyBackupTestMistakeView(View):
                 )
             )
 
-
-
 class KeyBackupTestSuccessView(View):
     def __init__(self, key_num: int):
         self.key_num = key_num
@@ -434,7 +432,6 @@ class KeyBackupTestSuccessView(View):
             return Destination(KeyOptionsView, view_args=dict(key_num=self.key_num), clear_history=True)
         else:
             return Destination(KeyFinalizeView)
-
 
 """****************************************************************************
    Finalize Key View
@@ -472,7 +469,6 @@ class KeyAddPassphraseView(View):
         super().__init__()
         self.key = self.controller.inMemoryStore.get_pending_key()
 
-
     def run(self):
         ret = key_screens.KeyAddPassphraseScreen(passphrase=self.key.passphrase).display()
 
@@ -499,9 +495,9 @@ class KeyReviewPassphraseView(View):
         # Get the before/after fingerprints
         network = self.settings.get_value(SettingsConstants.SETTING__NETWORK)
         passphrase = self.key.passphrase
-        fingerprint_with = self.key.get_fingerprint(network=network)
+        fingerprint_with = self.key.get_fingerprint()
         self.key.set_passphrase("")
-        fingerprint_without = self.key.get_fingerprint(network=network)
+        fingerprint_without = self.key.get_fingerprint()
         self.key.set_passphrase(passphrase)
         
         # Because we have ane explicit "Edit" button, we disable "BACK" to keep the
