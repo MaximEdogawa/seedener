@@ -44,7 +44,7 @@ class KeysMenuView(View):
         ).display()
 
         if len(self.keys) > 0 and selected_menu_num < len(self.keys):
-            return Destination(KeyOptionsView, view_args={"key_num": selected_menu_num})
+            return Destination(KeyOptionsView, view_args=dict(key_num = selected_menu_num))
 
         elif selected_menu_num == len(self.keys):
             return Destination(LoadKeyView)
@@ -119,7 +119,7 @@ class KeyWarningView(View):
     Views for actions on individual keys:
 ****************************************************************************"""
 class KeyOptionsView(View):
-    def __init__(self, key_num: int):
+    def __init__(self, key_num: int): 
         super().__init__()
         self.key_num = key_num
         self.key = self.controller.get_key(self.key_num)
@@ -512,8 +512,8 @@ class KeyFinalizeView(View):
         ).display()
 
         if button_data[selected_menu_num] == FINALIZE:
-            key_num = self.controller.inMemoryStore.finalize_pending_key()
-            return Destination(KeyOptionsView, view_args={"key_num": key_num}, clear_history=True)
+            self.controller.inMemoryStore.finalize_pending_key()
+            return Destination(MainMenuView, clear_history=True)
 
         elif button_data[selected_menu_num] == PASSPHRASE:
             return Destination(KeyAddPassphraseView)
@@ -524,7 +524,7 @@ class KeyAddPassphraseView(View):
         self.key = self.controller.inMemoryStore.get_pending_key()
 
     def run(self):
-        ret = key_screens.KeyPassphraseScreen(passphrase=self.key.passphrase).display()  
+        ret = key_screens.KeyPassphraseScreen().display()  
 
         if ret == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
@@ -563,11 +563,51 @@ class InputPassphraseView(View):
         
         # The passphrase will be the return value
         self.passphrase = ret
-        return Destination(KeyBackupView, view_args=dict(
+        return Destination(CheckKeyInputView,
+                view_args=dict(
                 key_num=self.key_num,
                 passphrase=self.passphrase
             )
         )
+
+class CheckKeyInputView(View):
+    def __init__(self, key_num: int , passphrase: str = ""):
+        super().__init__()
+        self.key_num = key_num
+        self.passphrase = passphrase
+        if self.key_num is None:
+            self.key = self.controller.inMemoryStore.get_pending_key()
+        else:
+            self.key = self.controller.get_key(self.key_num)
+        
+    def run(self):
+        if(self.key.get_private(self.passphrase)!=""):
+            return Destination(KeyWarningView, view_args=dict(key_num= self.key_num, passphrase=self.passphrase), clear_history=True)
+        else:
+            return Destination(KeyPassphraseRetryView, view_args=dict(key_num=self.key_num))
+
+
+class KeyPassphraseRetryView(View):
+    def __init__(self, key_num: int):
+        self.key_num=key_num
+
+    def run(self):
+        BACK = "Back"
+        RETRY = "Try Again"
+        button_data = [BACK,RETRY]
+
+        selected_menu_num = DireWarningScreen(
+            title="Verification Error",
+            show_back_button=False,
+            status_headline=f"Wrong Passphrase!",
+            text=f"Please input the correct passphrase.",
+            button_data=button_data,
+        ).display()
+
+        if button_data[selected_menu_num] == RETRY:
+            return  Destination(InputPassphraseView,view_args=dict(key_num=self.key_num)) 
+        elif button_data[selected_menu_num] == BACK:
+            return Destination(KeyOptionsView, view_args=dict(key_num = self.key_num), clear_history=True)
 
 class KeyReviewPassphraseView(View):
     """
@@ -604,6 +644,6 @@ class KeyReviewPassphraseView(View):
             return Destination(KeyAddPassphraseView)
         
         elif button_data[selected_menu_num] == DONE:
-            key_num = self.controller.inMemoryStore.finalize_pending_key()
-            return Destination(KeyOptionsView, view_args=dict(key_num = key_num,), clear_history=True)
+            self.controller.inMemoryStore.finalize_pending_key()
+            return Destination(MainMenuView, clear_history=True)
             
