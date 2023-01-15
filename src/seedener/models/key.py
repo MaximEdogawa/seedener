@@ -1,6 +1,7 @@
 import unicodedata
 import subprocess
 import hashlib
+from binascii import hexlify
 
 # Hsms Command-line Commands:
 HSMGEN = "hsmgen" #Keys generate
@@ -15,23 +16,30 @@ class InvalidKeyException(Exception):
 class Key:
     def __init__(self, passphrase: str = "") -> None:
         self._passphrase: str = ""
-        self.key_bytes_hash: bytes = None
+        self.isPassphraseSet: bool = False
+        self.key_hash_bytes: bytes = None
         self.priv_key: str = ""
         self.pub_key: str = ""
         self.set_passphrase(passphrase, paswordProtect=False)
         self._generate_key()
         
-        
     def _generate_key(self) -> bool:
         try:
             self.priv_key = subprocess.Popen(HSMGEN, shell = True, stdout=subprocess.PIPE).stdout.read().decode()
             commadPubGen = HSMPK + " " + self.priv_key
-            self.pub_key = subprocess.Popen(commadPubGen, shell = True, stdout=subprocess.PIPE).stdout.read().decode()        
+            self.pub_key = subprocess.Popen(commadPubGen, shell = True, stdout=subprocess.PIPE).stdout.read().decode()
+            self.key_hash_bytes = hashlib.pbkdf2_hmac(
+                "sha512",
+                self.priv_key.encode("utf-8"),
+                self.passphrase.encode("utf-8"),
+                PBKDF2_ROUNDS,
+                64,
+            )     
         except Exception as e:
             print(repr(e))
             raise InvalidKeyException(repr(e))
     
-    def get_private_protected(self, passphrase: str = ""):
+    def get_private(self, passphrase: str = ""):
         check_hash = hashlib.pbkdf2_hmac(
                 "sha512",
                 self.priv_key.encode("utf-8"),
@@ -39,20 +47,19 @@ class Key:
                 PBKDF2_ROUNDS,
                 64,
             )
-        if(check_hash==self.key_bytes_hash):
+        if(check_hash==self.key_hash_bytes):
             return self.priv_key
         else:
-            return "Passphrase does not Match!"
-
-    #TODO:Open for Review how to manage private key
-    def get_private(self):
-        return self.priv_key
+            return ""
 
     def get_pub(self):
         return self.pub_key
 
     def get_fingerprint(self):
-        return self.pub_key[:10] + "..."
+        return hexlify(self.key_hash_bytes).decode('utf-8')
+
+    def getIsPassphraseSet(self):
+        return self.isPassphraseSet
 
     @property
     def passphrase(self):
@@ -63,11 +70,14 @@ class Key:
         return unicodedata.normalize("NFC", self._passphrase)
 
     def set_passphrase(self, passphrase: str, paswordProtect: bool = True):
+        
         if passphrase:
+            self.isPassphraseSet=True
             self._passphrase = unicodedata.normalize("NFKD", passphrase)
         else:
             # Passphrase must always have a string value, even if it's just the empty
             # string.
+            self.isPassphraseSet=False
             self._passphrase = ""
 
         if paswordProtect:
@@ -76,7 +86,7 @@ class Key:
 
     def _generate_hash(self) -> bool:
         try:
-            self.key_bytes_hash = hashlib.pbkdf2_hmac(
+            self.key_hash_bytes = hashlib.pbkdf2_hmac(
                 "sha512",
                 self.priv_key.encode("utf-8"),
                 self.passphrase.encode("utf-8"),

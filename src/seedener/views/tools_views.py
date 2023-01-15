@@ -3,9 +3,9 @@ from textwrap import wrap
 
 from seedener.gui.components import FontAwesomeIconConstants, SeedenerCustomIconConstants
 
-from seedener.gui.screens.screen import LoadingScreenThread
+from seedener.gui.screens.screen import LoadingScreenThread, WarningScreen
 from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen)
-from seedener.gui.screens.tools_screens import ToolsDiceEntropyEntryScreen, ToolsImageEntropyLivePreviewScreen, ToolsImageEntropyFinalImageScreen
+from seedener.gui.screens.tools_screens import ToolsImageEntropyLivePreviewScreen, ToolsImageEntropyFinalImageScreen
 from seedener.models.settings import SettingsConstants, SettingsDefinition
 from seedener.models.key import Key
 
@@ -15,7 +15,7 @@ from .view import View, Destination, BackStackView
 
 class ToolsMenuView(View):
     def run(self):
-        CREATE = ("Create seed", FontAwesomeIconConstants.PLUS)
+        CREATE = ("Create key", FontAwesomeIconConstants.PLUS)
         button_data = [CREATE]
         screen = ButtonListScreen(
             title="Tools",
@@ -55,17 +55,29 @@ class ToolsCreateKeyEntryView(View):
     def __init__(self, total_keys: int):
         super().__init__()
         self.total_keys = total_keys
-    
+        self.loading_screen = None
+
 
     def run(self):
-        ret = ToolsDiceEntropyEntryScreen(
-            return_after_n_chars=self.total_keys,
+        ret = WarningScreen(
+            title="Caution",
+            status_headline="You will create a new Key Pair!",
+            text="Be at a save place!",
+            button_data=["I Understand"],
         ).display()
 
         if ret == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
-        key = Key()
-        self.controller.inMemoryStore.set_pending_key(key)
-        
+        self.loading_screen = LoadingScreenThread(text="Creating Key Pair...")
+        self.loading_screen.start()
+
+        try:
+            key = Key()
+            self.controller.inMemoryStore.set_pending_key(key)
+            self.loading_screen.stop()
+        except Exception as e:
+            self.loading_screen.stop()
+            raise e
+
         # Cannot return BACK to this View
-        return Destination(KeyWarningView, view_args={"key_num": None}, clear_history=True)
+        return Destination(KeyWarningView, view_args=dict(key_num= None, passphrase=""), clear_history=True)

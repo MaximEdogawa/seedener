@@ -104,36 +104,5 @@ class ToolsImageEntropyFinalImageScreen(BaseScreen):
         if input == HardwareButtonsConstants.KEY_LEFT:
             return RET_CODE__BACK_BUTTON
 
-@dataclass
-class ToolsDiceEntropyEntryScreen(KeyboardScreen):
-    def __post_init__(self):
-        # Override values set by the parent class
-        self.title = f"Dice Roll 1/{self.return_after_n_chars}"
 
-        # Specify the keys in the keyboard
-        self.rows = 3
-        self.cols = 3
-        self.keyboard_font_name = GUIConstants.ICON_FONT_NAME__FONT_AWESOME
-        self.keyboard_font_size = None  # Force auto-scaling to Key height
-        self.keys_charset = "".join([
-            FontAwesomeIconConstants.DICE_ONE,
-            FontAwesomeIconConstants.DICE_TWO,
-            FontAwesomeIconConstants.DICE_THREE,
-            FontAwesomeIconConstants.DICE_FOUR,
-            FontAwesomeIconConstants.DICE_FIVE,
-            FontAwesomeIconConstants.DICE_SIX,
-        ])
-
-        # Map Key display chars to actual output values
-        self.keys_to_values = {
-            FontAwesomeIconConstants.DICE_ONE: "1",
-            FontAwesomeIconConstants.DICE_TWO: "2",
-            FontAwesomeIconConstants.DICE_THREE: "3",
-            FontAwesomeIconConstants.DICE_FOUR: "4",
-            FontAwesomeIconConstants.DICE_FIVE: "5",
-            FontAwesomeIconConstants.DICE_SIX: "6",
-        }
-
-        # Now initialize the parent class
-        super().__post_init__()
     

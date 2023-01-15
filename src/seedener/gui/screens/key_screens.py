@@ -134,7 +134,7 @@ class KeyFinalizeScreen(ButtonListScreen):
         self.components.append(self.fingerprint_icontl)
 
 @dataclass
-class KeyAddPassphraseScreen(BaseTopNavScreen):
+class KeyPassphraseScreen(BaseTopNavScreen):
     title: str = "Add Passphrase"
     passphrase: str = ""
 

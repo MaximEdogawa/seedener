@@ -78,16 +78,17 @@ class LoadKeyView(View):
             return Destination(ScanView)
 
         elif button_data[selected_menu_num] == CREATE:
-            from .tools_views import ToolsMenuView
-            return Destination(ToolsMenuView)
+            from .tools_views import ToolsCreateKeyView
+            return Destination(ToolsCreateKeyView)
 
 """****************************************************************************
     View Key Substring flow
 ****************************************************************************"""
 class KeyWarningView(View):
-    def __init__(self, key_num: int):
+    def __init__(self, key_num: int, passphrase: str = ""):
         super().__init__()
         self.key_num = key_num
+        self.passphrase = passphrase
 
     def run(self):
         destination = Destination(
@@ -95,6 +96,7 @@ class KeyWarningView(View):
             view_args=dict(
                 key_num=self.key_num,
                 page_index=0,
+                passphrase=self.passphrase,
             ),
             skip_current_view=True,  # Prevent going BACK to WarningViews
         )
@@ -149,27 +151,29 @@ class KeyOptionsView(View):
             return Destination(MainMenuView)
        
         elif button_data[selected_menu_num] == EXPORT_XPUB:
-            return Destination(KeyExportPubTypeView, view_args=dict(key_num=self._num))
+            return Destination(KeyExportPubTypeView, view_args=dict(key_num=self.key_num,))
 
         elif button_data[selected_menu_num] == BACKUP:
-            return Destination(KeyBackupView, view_args=dict(key_num=self.key_num))
+            return Destination(KeyPasshpraseDecisionView, view_args=dict(key_num=self.key_num,))
 
         elif button_data[selected_menu_num] == DISCARD:
-            return Destination(KeyDiscardView, view_args=dict(key_num=self.key_num))
+            return Destination(KeyDiscardView, view_args=dict(key_num=self.key_num,))
 
 """****************************************************************************
-    Export Pub flow
+   Export Private Key flow
 ****************************************************************************"""
 class KeyView(View):
-    def __init__(self, key_num: int, page_index: int = 0):
+    def __init__(self, key_num: int, page_index: int = 0, passphrase: str = ""):
         super().__init__()
         self.key_num = key_num
+        self.passphrase = passphrase
         if self.key_num is None:
             self.key = self.controller.inMemoryStore.get_pending_key()
         else:
             self.key = self.controller.get_key(self.key_num)
         
         self.page_index = page_index
+        self.privKeyString = self.key.get_private(self.passphrase)
     
     def run(self):
         NEXT = "Next"
@@ -177,16 +181,17 @@ class KeyView(View):
         title = "Private Key"
         button_data = []
         substring_per_page = 4
-        key_length = len(self.key.get_private())
+        key_length = len(self.privKeyString)
         num_pages = int((key_length/SUBSTRING_LENGTH)/substring_per_page) + 1 #Increase Number by one for rest values
 
+        substrings = wrap(self.privKeyString, SUBSTRING_LENGTH)
+        substrings_per_page = substrings[self.page_index*substring_per_page:(self.page_index + 1)*substring_per_page]
+        
         if self.page_index < num_pages - 1 or self.key_num is None:
             button_data.append(NEXT)
         else:
             button_data.append(DONE)
 
-        substrings = wrap(self.key.get_private(), SUBSTRING_LENGTH)
-        substrings_per_page = substrings[self.page_index*substring_per_page:(self.page_index + 1)*substring_per_page]
         
         button_data = []
         if self.page_index < num_pages - 1 or self.key_num is None:
@@ -209,23 +214,47 @@ class KeyView(View):
             if self.key_num is None and self.page_index == num_pages - 1:
                 return Destination(
                     KeyBackupTestPromptView,
-                    view_args=dict(key_num=self.key_num),
+                    view_args=dict(
+                        key_num=self.key_num,
+                        passphrase=self.passphrase,
+                    )
                 )
             else:
                 return Destination(
                     KeyView,
-                    view_args=dict(key_num=self.key_num, page_index=self.page_index + 1)
+                    view_args=dict(
+                        key_num=self.key_num, 
+                        page_index=self.page_index + 1,
+                        passphrase=self.passphrase,
+                    )
                 )
 
         elif button_data[selected_menu_num] == DONE:
                 # Must clear history to avoid BACK button returning to private info
                 return Destination(
                     KeyBackupTestPromptView,
-                    view_args=dict(key_num=self.key_num),
-                )    
+                    view_args=dict(key_num=self.key_num,)
+                )  
 
 """****************************************************************************
-    Export Pub flow
+    Export Private key as QR
+****************************************************************************"""
+class KeyExportView(View):
+    def __init__(self, key_num: int):
+        super().__init__()
+        self.key_num = key_num
+
+"""****************************************************************************
+    Export Private key as QR
+****************************************************************************"""
+class KeyTranscribeKeyQRFormatView(View):
+    def __init__(self, key_num: int, passphrase: str = ""):
+        super().__init__()
+        self.key_num = key_num
+        self.passphrase = passphrase
+
+"""****************************************************************************
+    Export Public Key flow
 ****************************************************************************"""
 class KeyExportPubTypeView(View):
     def __init__(self, key_num: int):
@@ -233,25 +262,25 @@ class KeyExportPubTypeView(View):
         self.key_num = key_num
 
 """****************************************************************************
-    Export as KeyQR
+    Export Public Key as QR
 ****************************************************************************"""
-class KeyTranscribeKeyQRFormatView(View):
+class KeyExportPubTypeView(View):
     def __init__(self, key_num: int):
         super().__init__()
         self.key_num = key_num
 
 """****************************************************************************
-    Key backup View
+    Key Backup View
 ****************************************************************************"""
 class KeyBackupView(View):
-    def __init__(self, key_num):
+    def __init__(self, key_num, passphrase: str = ""):
         super().__init__()
         self.key_num = key_num
         self.key = self.controller.get_key(self.key_num)
-    
+        self.passphrase = passphrase
 
     def run(self):
-        VIEW_SUBSTRINGS = "View Key"
+        VIEW_SUBSTRINGS = "View Key"    
         EXPORT_KEYQR = "Export as KeyQR"
         button_data = [VIEW_SUBSTRINGS, EXPORT_KEYQR]
 
@@ -265,10 +294,10 @@ class KeyBackupView(View):
             return Destination(BackStackView)
 
         elif button_data[selected_menu_num] == VIEW_SUBSTRINGS:
-            return Destination(KeyWarningView, view_args={"key_num": self.key_num})
+            return Destination(KeyWarningView, view_args=dict(key_num=self.key_num, passphrase=self.passphrase), clear_history=True)
 
         elif button_data[selected_menu_num] == EXPORT_KEYQR:
-            return Destination(KeyTranscribeKeyQRFormatView, view_args={"key_num": self.key_num})
+            return Destination(KeyTranscribeKeyQRFormatView, view_args=dict(key_num=self.key_num, passphrase=self.passphrase), clear_history=True)
 
 """****************************************************************************
     Key Discard View
@@ -282,13 +311,41 @@ class KeyDiscardView(View):
         else:
             self.key = self.controller.inMemoryStore.pending_key
 
+    def run(self):
+        KEEP = "Keep key"
+        DISCARD = ("Discard", None, None, "red")
+        button_data = [KEEP, DISCARD]
+
+        fingerprint = self.key.get_fingerprint(self.settings.get_value(SettingsConstants.SETTING__NETWORK))
+        selected_menu_num = WarningScreen(
+            title="Discard in Memory Key?!",
+            status_headline=None,
+            text=f"Wipe key {fingerprint} from the device?",
+            show_back_button=False,
+            button_data=button_data,
+        ).display()
+
+        if button_data[selected_menu_num] == KEEP:
+            # Use skip_current_view=True to prevent BACK from landing on this warning screen
+            if self.key_num is not None:
+                return Destination(KeyOptionsView, view_args=dict(key_num=self.key_num,), skip_current_view=True)
+            else:
+                return Destination(KeyFinalizeView, skip_current_view=True,)
+
+        elif button_data[selected_menu_num] == DISCARD:
+            if self.key_num is not None:
+                self.controller.discard_key(self.key_num)
+            else:
+                self.controller.inMemoryStore.clear_pending_key()
+            return Destination(MainMenuView, clear_history=True)
 
 """****************************************************************************
     Key SubString Backup Test
 ****************************************************************************"""
 class KeyBackupTestPromptView(View):
-    def __init__(self, key_num: int):
+    def __init__(self, key_num: int, passphrase: str = ""):
         self.key_num = key_num
+        self.passhprase = passphrase
 
     def run(self):
         VERIFY = "Verify"
@@ -301,7 +358,7 @@ class KeyBackupTestPromptView(View):
         if button_data[selected_menu_num] == VERIFY:
             return Destination(
                 KeyBackupTestView,
-                view_args=dict(key_num=self.key_num),
+                view_args=dict(key_num=self.key_num, passphrase=self.passhprase,)
             )
 
         elif button_data[selected_menu_num] == SKIP:
@@ -325,7 +382,6 @@ class KeyBackupTestView(View):
         
         self.substrings = wrap(self.key.get_private(), SUBSTRING_LENGTH)
         self.cur_index = cur_index
-
 
     def run(self):
         if self.cur_index is None:
@@ -356,15 +412,14 @@ class KeyBackupTestView(View):
                 # Successfully confirmed the full key!
                 return Destination(
                     KeyBackupTestSuccessView,
-                    view_args=dict(key_num=self.key_num),
+                    view_args=dict(key_num=self.key_num,)
                 )
             else:
                 # Continue testing the remaining substrings
                 return Destination(
                     KeyBackupTestView,
-                    view_args=dict(key_num=self.key_num, confirmed_list=self.confirmed_list),
+                    view_args=dict(key_num=self.key_num, confirmed_list=self.confirmed_list,)
                 )
-
         else:
             # Picked the WRONG Substring!
             return Destination(
@@ -385,7 +440,6 @@ class KeyBackupTestMistakeView(View):
         self.wrong_string = wrong_string
         self.confirmed_list = confirmed_list
 
-
     def run(self):
         REVIEW = "Review Key Substrings"
         RETRY = "Try Again"
@@ -402,7 +456,7 @@ class KeyBackupTestMistakeView(View):
         if button_data[selected_menu_num] == REVIEW:
             return Destination(
                 KeyView,
-                view_args=dict(key_num=self.key_num),
+                view_args=dict(key_num=self.key_num)
             )
 
         elif button_data[selected_menu_num] == RETRY:
@@ -411,7 +465,7 @@ class KeyBackupTestMistakeView(View):
                 view_args=dict(
                     key_num=self.key_num,
                     confirmed_list=self.confirmed_list,
-                    cur_index=self.cur_index,
+                    cur_index=self.cur_index
                 )
             )
 
@@ -470,7 +524,7 @@ class KeyAddPassphraseView(View):
         self.key = self.controller.inMemoryStore.get_pending_key()
 
     def run(self):
-        ret = key_screens.KeyAddPassphraseScreen(passphrase=self.key.passphrase).display()
+        ret = key_screens.KeyPassphraseScreen(passphrase=self.key.passphrase).display()  
 
         if ret == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
@@ -478,6 +532,42 @@ class KeyAddPassphraseView(View):
         # The new passphrase will be the return value
         self.key.set_passphrase(ret)
         return Destination(KeyReviewPassphraseView)
+
+class KeyPasshpraseDecisionView(View):
+    def __init__(self, key_num: int):
+        super().__init__()
+        self.key_num = key_num
+        if self.key_num is None:
+            self.key = self.controller.inMemoryStore.get_pending_key()
+        else:
+            self.key = self.controller.get_key(self.key_num)
+
+    def run(self):
+        if(self.key.getIsPassphraseSet()):
+            return  Destination(InputPassphraseView,view_args=dict(key_num=self.key_num))
+        else:
+            return Destination(KeyBackupView,view_args=dict(key_num=self.key_num, passphrase=""))
+
+
+class InputPassphraseView(View):
+    def __init__(self, key_num: int):
+        super().__init__()
+        self.key_num = key_num
+        self.passphrase: str = ""
+
+    def run(self):
+        ret = key_screens.KeyPassphraseScreen(title="Input Passphrase", passphrase=self.passphrase).display() 
+
+        if ret == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+        
+        # The passphrase will be the return value
+        self.passphrase = ret
+        return Destination(KeyBackupView, view_args=dict(
+                key_num=self.key_num,
+                passphrase=self.passphrase
+            )
+        )
 
 class KeyReviewPassphraseView(View):
     """
@@ -515,5 +605,5 @@ class KeyReviewPassphraseView(View):
         
         elif button_data[selected_menu_num] == DONE:
             key_num = self.controller.inMemoryStore.finalize_pending_key()
-            return Destination(KeyOptionsView, view_args={"key_num": key_num}, clear_history=True)
+            return Destination(KeyOptionsView, view_args=dict(key_num = key_num,), clear_history=True)
             

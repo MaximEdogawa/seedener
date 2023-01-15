@@ -93,14 +93,14 @@ class Controller(Singleton):
         if key_num < len(self.inMemoryStore.keys):
             return self.inMemoryStore.keys[key_num]
         else:
-            raise Exception(f"There is no seed_num {key_num}; only {len(self.inMemoryStore.keys)} in memory.")
+            raise Exception(f"There is no key_num {key_num}; only {len(self.inMemoryStore.keys)} in memory.")
 
 
     def discard_key(self, key_num: int):
         if key_num < len(self.inMemoryStore.keys):
             del self.inMemoryStore.keys[key_num]
         else:
-            raise Exception(f"There is no seed_num {key_num}; only {len(self.inMemoryStore.keys)} in memory.")
+            raise Exception(f"There is no key_num {key_num}; only {len(self.inMemoryStore.keys)} in memory.")
 
     
 
