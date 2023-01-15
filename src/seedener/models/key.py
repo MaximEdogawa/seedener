@@ -15,30 +15,37 @@ class InvalidKeyException(Exception):
 
 class Key:
     def __init__(self, passphrase: str = "") -> None:
-        self._passphrase: str = ""
-        self.isPassphraseSet: bool = False
+        self.paswordProtect: bool = False
         self.key_hash_bytes: bytes = None
         self.priv_key: str = ""
         self.pub_key: str = ""
-        self.set_passphrase(passphrase, paswordProtect=False)
-        self._generate_key()
+        self._generate_key(passphrase)
         
-    def _generate_key(self) -> bool:
+    def _generate_key(self, passphrase: str = ""):
         try:
             self.priv_key = subprocess.Popen(HSMGEN, shell = True, stdout=subprocess.PIPE).stdout.read().decode()
             commadPubGen = HSMPK + " " + self.priv_key
             self.pub_key = subprocess.Popen(commadPubGen, shell = True, stdout=subprocess.PIPE).stdout.read().decode()
-            self.key_hash_bytes = hashlib.pbkdf2_hmac(
-                "sha512",
-                self.priv_key.encode("utf-8"),
-                self.passphrase.encode("utf-8"),
-                PBKDF2_ROUNDS,
-                64,
-            )     
+            self._generate_hash(passphrase)
+     
         except Exception as e:
             print(repr(e))
             raise InvalidKeyException(repr(e))
-    
+
+    def _generate_hash(self, passphrase: str = ""):
+        try:
+            self.key_hash_bytes = hashlib.pbkdf2_hmac(
+                "sha512",
+                self.priv_key.encode("utf-8"),
+                passphrase.encode("utf-8"),
+                PBKDF2_ROUNDS,
+                64,
+            )
+        except Exception as e:
+            print(repr(e))
+            raise InvalidKeyException(repr(e))
+
+    #TODO: review get private key code for security
     def get_private(self, passphrase: str = ""):
         check_hash = hashlib.pbkdf2_hmac(
                 "sha512",
@@ -58,44 +65,23 @@ class Key:
     def get_fingerprint(self):
         return hexlify(self.key_hash_bytes).decode('utf-8')
 
-    def getIsPassphraseSet(self):
-        return self.isPassphraseSet
+    def getPasswordProtect(self):
+        return self.paswordProtect
 
-    @property
-    def passphrase(self):
-        return self._passphrase
-
-    @property
-    def passphrase_display(self):
-        return unicodedata.normalize("NFC", self._passphrase)
-
-    def set_passphrase(self, passphrase: str, paswordProtect: bool = True):
-        
+    def set_passphrase(self, passphrase: str, paswordProtect: bool = True):   
         if passphrase:
-            self.isPassphraseSet=True
-            self._passphrase = unicodedata.normalize("NFKD", passphrase)
+            passphrase = unicodedata.normalize("NFKD", passphrase)
         else:
             # Passphrase must always have a string value, even if it's just the empty
             # string.
-            self.isPassphraseSet=False
-            self._passphrase = ""
+            passphrase=""
 
         if paswordProtect:
+            self.paswordProtect=True
             # Regenerate the internal key since passphrase changes the result
-            self._generate_hash()
-
-    def _generate_hash(self) -> bool:
-        try:
-            self.key_hash_bytes = hashlib.pbkdf2_hmac(
-                "sha512",
-                self.priv_key.encode("utf-8"),
-                self.passphrase.encode("utf-8"),
-                PBKDF2_ROUNDS,
-                64,
-            )
-        except Exception as e:
-            print(repr(e))
-            raise InvalidKeyException(repr(e))
+            self._generate_hash(passphrase)
+        else:
+            self.paswordProtect=False
 
     ### override operators    
     def __eq__(self, other):

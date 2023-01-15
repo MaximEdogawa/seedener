@@ -24,7 +24,7 @@ class KeysMenuView(View):
         for key in self.controller.inMemoryStore.keys:
             self.keys.append({
                 "fingerprint": key.get_fingerprint(),
-                "has_passphrase": key.passphrase is not None
+                "has_passphrase": key.getPasswordProtect()
             })
 
     def run(self):
@@ -34,7 +34,11 @@ class KeysMenuView(View):
 
         button_data = []
         for key in self.keys:
-            button_data.append((key["fingerprint"], SeedenerCustomIconConstants.FINGERPRINT, "blue"))
+            if(key["has_passphrase"]):
+                button_data.append((key["fingerprint"][:15] + "...", SeedenerCustomIconConstants.FINGERPRINT, "blue"))
+            else:
+                button_data.append((key["fingerprint"][:15] + "...", SeedenerCustomIconConstants.FINGERPRINT, "gray"))
+
         button_data.append("Load a key")
 
         selected_menu_num = ButtonListScreen(
@@ -142,8 +146,8 @@ class KeyOptionsView(View):
 
         selected_menu_num = key_screens.KeyOptionsScreen(
             button_data=button_data,
-            fingerprint=self.key.get_fingerprint(),
-            has_passphrase=self.key.passphrase is not None,
+            fingerprint=self.key.get_fingerprint()[:15] + "...",
+            has_passphrase=self.key.getPasswordProtect(),
         ).display() 
 
         if selected_menu_num == RET_CODE__BACK_BUTTON:
@@ -530,8 +534,7 @@ class KeyAddPassphraseView(View):
             return Destination(BackStackView)
         
         # The new passphrase will be the return value
-        self.key.set_passphrase(ret)
-        return Destination(KeyReviewPassphraseView)
+        return Destination(KeyReviewPassphraseView, view_args=dict(passphrase=ret))
 
 class KeyPasshpraseDecisionView(View):
     def __init__(self, key_num: int):
@@ -543,7 +546,7 @@ class KeyPasshpraseDecisionView(View):
             self.key = self.controller.get_key(self.key_num)
 
     def run(self):
-        if(self.key.getIsPassphraseSet()):
+        if(self.key.getPasswordProtect()):
             return  Destination(InputPassphraseView,view_args=dict(key_num=self.key_num))
         else:
             return Destination(KeyBackupView,view_args=dict(key_num=self.key_num, passphrase=""))
@@ -610,12 +613,10 @@ class KeyPassphraseRetryView(View):
             return Destination(KeyOptionsView, view_args=dict(key_num = self.key_num), clear_history=True)
 
 class KeyReviewPassphraseView(View):
-    """
-        Display the completed passphrase back to the user.
-    """
-    def __init__(self):
+    def __init__(self, passphrase: str = ""):
         super().__init__()
         self.key = self.controller.inMemoryStore.get_pending_key()
+        self.passhrase = passphrase
 
     def run(self):
         EDIT = "Edit passphrase"
@@ -624,18 +625,18 @@ class KeyReviewPassphraseView(View):
 
         # Get the before/after fingerprints
         network = self.settings.get_value(SettingsConstants.SETTING__NETWORK)
-        passphrase = self.key.passphrase
-        fingerprint_with = self.key.get_fingerprint()
-        self.key.set_passphrase("")
-        fingerprint_without = self.key.get_fingerprint()
-        self.key.set_passphrase(passphrase)
-        
+        # Only 10 char for fingerprint for display purpose
+        fingerprint_with = self.key.get_fingerprint()[:4] + "..."
+        self.key.set_passphrase(self.passhrase)
+        fingerprint_without = self.key.get_fingerprint()[:4] + "..."
         # Because we have ane explicit "Edit" button, we disable "BACK" to keep the
         # routing options sane.
+        #TODO: Review if showing password to the user is good for usablity or bad for security
+        #hiddenPassphrase = "*" * len(self.passhrase)
         selected_menu_num = key_screens.KeyReviewPassphraseScreen( 
             fingerprint_without=fingerprint_without,
             fingerprint_with=fingerprint_with,
-            passphrase=self.key.passphrase,
+            passphrase=self.passhrase, 
             button_data=button_data,
             show_back_button=False,
         ).display()
