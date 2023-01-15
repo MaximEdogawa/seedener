@@ -16,6 +16,9 @@ from seedener.gui.screens.screen import LargeIconStatusScreen, LoadingScreenThre
 from seedener.models.key import InvalidKeyException, Key
 from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen,
     WarningScreen, DireWarningScreen, key_screens)
+from seedener.models.qr_type import QRType 
+from seedener.models.encode_qr import EncodeQR 
+
 SUBSTRING_LENGTH = 7
 class KeysMenuView(View):
     def __init__(self):
@@ -249,13 +252,194 @@ class KeyExportView(View):
         self.key_num = key_num
 
 """****************************************************************************
-    Export Private key as QR
+    Export Key as QR
 ****************************************************************************"""
 class KeyTranscribeKeyQRFormatView(View):
     def __init__(self, key_num: int, passphrase: str = ""):
         super().__init__()
         self.key_num = key_num
         self.passphrase = passphrase
+
+    def run(self):
+        STANDARD = "Standard: 29x29"
+        COMPACT = "Compact: 25x25"
+        num_modules_standard = 29
+        num_modules_compact = 25
+
+        if self.settings.get_value(SettingsConstants.SETTING__COMPACT_KEYQR) != SettingsConstants.OPTION__ENABLED:
+            # Only configured for standard KeyQR
+            return Destination(
+                KeyTranscribeKeyQRWarningView,
+                view_args={
+                    "key_num": self.key_num,
+                    "keyqr_format": QRType.KEY__KEYQR,
+                    "num_modules": num_modules_standard,
+                    "passphrase": self.passphrase,
+
+                },
+                skip_current_view=True,
+            ) 
+
+        button_data = [STANDARD, COMPACT]
+
+        selected_menu_num = key_screens.KeyTranscribeKeyQRFormatScreen( 
+            title="KeyQR Format",
+            button_data=button_data,
+        ).display()
+
+        if selected_menu_num == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+        
+        if button_data[selected_menu_num] == STANDARD: 
+            keyqr_format = QRType.KEY__KEYQR
+            num_modules = num_modules_standard
+        else:
+            keyqr_format = QRType.KEY__COMPACTKEYQR 
+            num_modules = num_modules_compact
+        
+        return Destination(
+            KeyTranscribeKeyQRWarningView,
+                view_args={
+                    "key_num": self.key_num,
+                    "keyqr_format": keyqr_format,
+                    "num_modules": num_modules,
+                }
+            )
+
+class KeyTranscribeKeyQRWarningView(View):
+    def __init__(self, key_num: int, keyqr_format: str = QRType.KEY__KEYQR, num_modules: int = 29, passphrase: str = ""):
+        super().__init__()
+        self.key_num = key_num
+        self.keyqr_format = keyqr_format
+        self.num_modules = num_modules
+        self.passphrase = passphrase
+
+    def run(self):
+        destination = Destination(
+            KeyTranscribeKeyQRWholeQRView,
+            view_args={
+                "key_num": self.key_num,
+                "keyqr_format": self.keyqr_format,
+                "num_modules": self.num_modules,
+                "passphrase": self.passphrase,
+
+            },
+            skip_current_view=True,  # Prevent going BACK to WarningViews
+        )
+
+        if self.settings.get_value(SettingsConstants.SETTING__DIRE_WARNINGS) == SettingsConstants.OPTION__DISABLED:
+            # Forward straight to transcribing the KeyQR
+            return destination
+
+        selected_menu_num = DireWarningScreen(
+            status_headline="KeyQR is your private key!",
+            text="""Never photograph it or scan it into an online device.""",
+        ).display()
+
+        if selected_menu_num == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+
+        else:
+            # User clicked "I Understand"
+            return destination  
+
+class KeyTranscribeKeyQRWholeQRView(View):
+    def __init__(self, key_num: int, keyqr_format: str, num_modules: int, passphrase: str = ""):
+        super().__init__()
+        self.key_num = key_num
+        self.keyqr_format = keyqr_format
+        self.num_modules = num_modules
+        self.key = self.controller.get_key(key_num)
+        self.passphrase = passphrase
+
+    def run(self):
+        e = EncodeQR(
+            key_phrase=self.key.get_private(self.passphrase),
+            qr_type=self.keyqr_format,
+        )
+        data = e.next_part()
+
+        ret = key_screens.KeyTranscribeKeyQRWholeQRScreen( 
+            qr_data=data,
+            num_modules=self.num_modules,
+        ).display()
+
+        if ret == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+        
+        else:
+            return Destination(
+                KeyTranscribeKeyQRZoomedInView,
+                view_args={
+                    "key_num": self.key_num,
+                    "keyqr_format": self.keyqr_format,
+                    "passphrase": self.passphrase
+                }
+            )
+
+class KeyTranscribeKeyQRZoomedInView(View):
+    def __init__(self, key_num: int, keyqr_format: str, passphrase: str = ""):
+        super().__init__()
+        self.key_num = key_num 
+        self.keyqr_format = keyqr_format
+        self.key = self.controller.get_key(key_num)
+        self.passphrase = passphrase
+
+
+    def run(self):
+        e = EncodeQR(
+            key_phrase=self.key.get_private(self.passphrase),
+            qr_type=self.keyqr_format,
+        )
+
+        data = e.next_part()
+        if self.keyqr_format == QRType.KEY__COMPACTKEYQR:
+            num_modules = 21
+        else:
+            num_modules = 25
+
+        key_screens.KeyTranscribeKeyQRZoomedInScreen( 
+            qr_data=data,
+            num_modules=num_modules,
+        ).display()
+
+        return Destination(KeyTranscribeKeyQRConfirmQRPromptView, view_args=dict(key_num=self.key_num, passphrase=self.passphrase))
+
+class KeyTranscribeKeyQRConfirmQRPromptView(View):
+    def __init__(self, key_num: int, passphrase: str = ""):
+        super().__init__()
+        self.key_num = key_num
+        self.key = self.controller.get_key(key_num)
+        self.passphrase = passphrase
+
+    def run(self):
+        SCAN = ("Confirm KeyQR", FontAwesomeIconConstants.QRCODE)
+        DONE = "Done"
+        button_data = [SCAN, DONE]
+
+        selected_menu_option = key_screens.KeyTranscribeKeyQRConfirmQRPromptScreen( 
+            title="Confirm KeyQR?",
+            button_data=button_data,
+        ).display()
+
+        if selected_menu_option == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+
+        elif button_data[selected_menu_option] == SCAN:
+            return Destination(KeyTranscribeKeyQRConfirmScanView, view_args={"key_num": self.key_num})
+
+        elif button_data[selected_menu_option] == DONE:
+            return Destination(KeyOptionsView, view_args={"key_num": self.key_num}, clear_history=True)
+
+class KeyTranscribeKeyQRConfirmScanView(View):
+    def __init__(self, key_num: int):
+        super().__init__()
+        self.key_num = key_num
+        self.key = self.controller.get_key(key_num)
+
+    def run(self):
+        #TODO: Implement Scan View first
+        return Destination(BackStackView, skip_current_view=True)
 
 """****************************************************************************
     Export Public Key flow
@@ -585,7 +769,7 @@ class CheckKeyInputView(View):
         
     def run(self):
         if(self.key.get_private(self.passphrase)!=""):
-            return Destination(KeyWarningView, view_args=dict(key_num= self.key_num, passphrase=self.passphrase), clear_history=True)
+            return Destination(KeyBackupView, view_args=dict(key_num= self.key_num, passphrase=self.passphrase), clear_history=True)
         else:
             return Destination(KeyPassphraseRetryView, view_args=dict(key_num=self.key_num))
 
