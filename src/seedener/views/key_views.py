@@ -11,8 +11,7 @@ from .view import View, Destination, BackStackView, MainMenuView
 from seedener.controller import Controller
 from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, settings_screens)
 from seedener.models.settings import SettingsConstants, SettingsDefinition
-from seedener.gui.screens.screen import LargeIconStatusScreen, LoadingScreenThread
-
+from seedener.gui.screens.screen import LargeIconStatusScreen, QRDisplayScreen 
 from seedener.models.key import InvalidKeyException, Key
 from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen,
     WarningScreen, DireWarningScreen, key_screens)
@@ -131,14 +130,12 @@ class KeyOptionsView(View):
         self.key_num = key_num
         self.key = self.controller.get_key(self.key_num)
 
-
     def run(self):
         EXPORT_XPUB = "Export Pub"
         BACKUP = ("Backup key", None, None, None, SeedenerCustomIconConstants.SMALL_CHEVRON_RIGHT)
         DISCARD = ("Discard key", None, None, "red")
 
         button_data = []
-
            
         if self.settings.get_value(SettingsConstants.SETTING__XPUB_EXPORT) == SettingsConstants.OPTION__ENABLED:
             button_data.append(EXPORT_XPUB)
@@ -242,14 +239,6 @@ class KeyView(View):
                     KeyBackupTestPromptView,
                     view_args=dict(key_num=self.key_num,)
                 )  
-
-"""****************************************************************************
-    Export Private key as QR
-****************************************************************************"""
-class KeyExportView(View):
-    def __init__(self, key_num: int):
-        super().__init__()
-        self.key_num = key_num
 
 """****************************************************************************
     Export Key as QR
@@ -448,14 +437,66 @@ class KeyExportPubTypeView(View):
     def __init__(self, key_num: int):
         super().__init__()
         self.key_num = key_num
+        self.key = self.controller.get_key(key_num)
 
-"""****************************************************************************
-    Export Public Key as QR
-****************************************************************************"""
-class KeyExportPubTypeView(View):
-    def __init__(self, key_num: int):
+    def run(self):
+        num_modules_compact = 25
+        fingerprint = self.key.get_fingerprint()[:10]+"..."
+        ret = WarningScreen(
+            title="Caution",
+            status_headline="You will display the public key of:",
+            text= fingerprint,
+            button_data=["I Understand"],
+        ).display()
+        
+        if ret == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+        else:
+            return Destination(KeyExportPubQRDisplayView, view_args=dict(key_num=self.key_num))
+
+class KeyTranscribePubKeyQRWholeQRView(View):
+    def __init__(self, key_num: int, keyqr_format: str, num_modules: int):
         super().__init__()
         self.key_num = key_num
+        self.keyqr_format = keyqr_format
+        self.num_modules = num_modules
+        self.key = self.controller.get_key(key_num)
+        self.qr_encoder = EncodeQR(
+            key_phrase=self.key.get_pub(), 
+            qr_type=self.keyqr_format,
+        )
+
+    def run(self):
+       
+        data = self.qr_encoder.next_part() 
+
+        ret = key_screens.KeyTranscibePubKeyQRWholeQRScreen(  
+            qr_data=data,
+            num_modules=self.num_modules,
+        ).display()
+
+        if ret == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+        else:
+            return Destination(KeysMenuView)
+
+class KeyExportPubQRDisplayView(View):
+    def __init__(self, key_num: int):
+        super().__init__()
+        self.key = self.controller.get_key(key_num)
+
+        qr_density = self.settings.get_value(SettingsConstants.SETTING__QR_DENSITY)
+        qr_type = QRType.KEY__KEYQR
+ 
+        self.qr_encoder = EncodeQR(
+            key_phrase=self.key.get_pub(), 
+            qr_type=qr_type,
+            qr_density=qr_density,
+        )
+
+    def run(self):
+        QRDisplayScreen(qr_encoder=self.qr_encoder).display()  
+        return Destination(MainMenuView)
 
 """****************************************************************************
     Key Backup View
@@ -546,7 +587,7 @@ class KeyBackupTestPromptView(View):
         if button_data[selected_menu_num] == VERIFY:
             return Destination(
                 KeyBackupTestView,
-                view_args=dict(key_num=self.key_num, passphrase=self.passhprase,)
+                view_args=dict(key_num=self.key_num)
             )
 
         elif button_data[selected_menu_num] == SKIP:
