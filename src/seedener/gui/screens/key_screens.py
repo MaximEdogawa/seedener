@@ -616,6 +616,31 @@ class KeyTranscribeKeyQRWholeQRScreen(WarningEdgesMixin, ButtonListScreen):
         self.paste_images.append((qr_image, (int((self.canvas_width - qr_width)/2), self.top_nav.height)))
 
 @dataclass
+class KeyTranscibePubKeyQRWholeQRScreen(WarningEdgesMixin, ButtonListScreen):
+    qr_data: str = None
+    num_modules: int = None
+
+    def __post_init__(self):
+        self.button_data = [f"Public KeyQR"]
+        self.is_bottom_list = True
+        self.status_color = GUIConstants.DIRE_WARNING_COLOR
+        super().__post_init__()
+
+        qr_height = self.buttons[0].screen_y - GUIConstants.COMPONENT_PADDING
+        qr_width = qr_height
+
+        qr = QR()
+        qr_image = qr.qrimage(
+            data=self.qr_data,
+            width=qr_width,
+            height=qr_height,
+            border=1,
+            style=QR.STYLE__ROUNDED
+        ).convert("RGBA")
+
+        self.paste_images.append((qr_image, (int((self.canvas_width - qr_width)/2), self.top_nav.height)))
+
+@dataclass
 class KeyTranscribeKeyQRZoomedInScreen(BaseScreen):
     qr_data: str = None
     num_modules: int = None
