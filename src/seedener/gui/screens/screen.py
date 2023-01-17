@@ -248,8 +248,6 @@ class BaseTopNavScreen(BaseScreen):
                 # Write the screen updates
                 self.renderer.show_image()
 
-
-
 @dataclass
 class ButtonListScreen(BaseTopNavScreen):
     button_data: list = None                  # list can be a mix of str or tuple(label: str, icon_name: str)

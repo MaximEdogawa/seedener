@@ -11,7 +11,7 @@ from seedener.hardware.microsd import MicroSD
 from seedener.views.screensaver import ScreensaverScreen
 from seedener.views.view import Destination, NotYetImplementedView, UnhandledExceptionView
 
-from .models import Settings, Singleton
+from .models import Key, KeyStorage, Settings, Singleton
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +30,7 @@ class BackStack(List[Destination]):
 class Controller(Singleton):
     VERSION = "0.0.1"
     buttons: HardwareButtons = None
+    inMemoryStore: KeyStorage = None
     settings: Settings = None
     renderer: Renderer = None
     unverified_address = None
@@ -37,7 +38,6 @@ class Controller(Singleton):
     image_entropy_preview_frames: List[Image] = None
     image_entropy_final_image: Image = None
 
-    address_explorer_data: dict = None
     resume_main_flow: str = None
 
     back_stack: BackStack = None
@@ -69,7 +69,7 @@ class Controller(Singleton):
 
         # models
         controller.settings = Settings.get_instance()
-        
+        controller.inMemoryStore = KeyStorage()
         controller.microsd = MicroSD.get_instance()
         controller.microsd.start_detection()
 
@@ -88,6 +88,21 @@ class Controller(Singleton):
     def camera(self):
         from .hardware.camera import Camera
         return Camera.get_instance()
+
+    def get_key(self, key_num: int) -> Key:
+        if key_num < len(self.inMemoryStore.keys):
+            return self.inMemoryStore.keys[key_num]
+        else:
+            raise Exception(f"There is no key_num {key_num}; only {len(self.inMemoryStore.keys)} in memory.")
+
+
+    def discard_key(self, key_num: int):
+        if key_num < len(self.inMemoryStore.keys):
+            del self.inMemoryStore.keys[key_num]
+        else:
+            raise Exception(f"There is no key_num {key_num}; only {len(self.inMemoryStore.keys)} in memory.")
+
+    
 
     def pop_prev_from_back_stack(self):
         from .views import Destination

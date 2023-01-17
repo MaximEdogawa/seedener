@@ -68,7 +68,7 @@ class SettingsConstants:
         (DENSITY__HIGH, "High"),
     ]
 
-    # Seed-related constants
+    # Key-related constants
     MAINNET = "M"
     TESTNET = "T"
     REGTEST = "R"
@@ -142,7 +142,7 @@ class SettingsConstants:
     SETTING__XPUB_DETAILS = "xpub_details"
     SETTING__PASSPHRASE = "passphrase"
     SETTING__CAMERA_ROTATION = "camera_rotation"
-    SETTING__COMPACT_SEEDQR = "compact_seedqr"
+    SETTING__COMPACT_KEYQR = "compact_keyqr"
     SETTING__PRIVACY_WARNINGS = "privacy_warnings"
     SETTING__DIRE_WARNINGS = "dire_warnings"
     SETTING__PARTNER_LOGOS = "partner_logos"
@@ -330,15 +330,6 @@ class SettingsDefinition:
                       selection_options=SettingsConstants.ALL_LANGUAGES,
                       default_value=SettingsConstants.LANGUAGE__ENGLISH),
 
-        # TODO: Support other bip-39 wordlist languages! Until then, type == HIDDEN
-        SettingsEntry(category=SettingsConstants.CATEGORY__SYSTEM,
-                      attr_name=SettingsConstants.SETTING__WORDLIST_LANGUAGE,
-                      display_name="Mnemonic language",
-                      type=SettingsConstants.TYPE__SELECT_1,
-                      visibility=SettingsConstants.VISIBILITY__HIDDEN,
-                      selection_options=SettingsConstants.ALL_WORDLIST_LANGUAGES,
-                      default_value=SettingsConstants.WORDLIST_LANGUAGE__ENGLISH),
-
         SettingsEntry(category=SettingsConstants.CATEGORY__SYSTEM,
                       attr_name=SettingsConstants.SETTING__PERSISTENT_SETTINGS,
                       display_name="Persistent settings",
@@ -416,8 +407,8 @@ class SettingsDefinition:
                       default_value=SettingsConstants.CAMERA_ROTATION__0),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
-                      attr_name=SettingsConstants.SETTING__COMPACT_SEEDQR,
-                      display_name="CompactSeedQR",
+                      attr_name=SettingsConstants.SETTING__COMPACT_KEYQR,
+                      display_name="CompactKeyQR",
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__DISABLED),
 
