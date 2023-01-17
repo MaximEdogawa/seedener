@@ -584,7 +584,7 @@ class KeyBackupTestPromptScreen(ButtonListScreen):
         super().__post_init__()
 
         self.components.append(TextArea(
-            text="Optionally verify that your mnemonic backup is correct.",
+            text="Optionally verify that your key backup is correct.",
             screen_y=self.top_nav.height,
             is_text_centered=True,
         ))

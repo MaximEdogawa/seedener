@@ -1,7 +1,5 @@
 import math
-
 from dataclasses import dataclass
-from typing import List 
 from seedener.helpers.qr import QR 
 from seedener.models import Key, QRType  
 from seedener.models.settings import SettingsConstants 
@@ -87,10 +85,8 @@ class KeyQrEncoder(BaseQrEncoder):
         return 1
 
     def next_part(self):
-        data = ""
-        # Output Key as Qr Numberic Bytes
-        #TODO: add qrtool encode for key_phrase
-        return data
+        # To Make sure string is unicode UTF8 encode and decode
+        return self.key_phrase.encode().decode('UTF-8')
 
     @property
     def is_complete(self):

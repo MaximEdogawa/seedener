@@ -1040,7 +1040,6 @@ class BtcAmount(BaseComponent):
 
 @dataclass
 class Button(BaseComponent):
-    # TODO: Rename the seedener.helpers.Buttons class (to Inputs?) to reduce confusion
     # with this GUI component.
     """
         Attrs with defaults must be listed last.
