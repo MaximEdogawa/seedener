@@ -5,5 +5,6 @@ from .settings import *
 from .key import *
 from .key_storage import *
 from .qr_type import *
+from .decode_qr import *
 
 

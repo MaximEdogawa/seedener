@@ -5,6 +5,8 @@ class QRType:
     KEY__KEYQR = "key__keyqr"
     KEY__COMPACTKEYQR = "key__compactkeyqr"
     KEY__UR2 = "key__ur2"
+    SECRECT__COMPONENT = "se1"
+    SPEND_BUNDLE= "bls"
 
     SETTINGS = "settings"
 

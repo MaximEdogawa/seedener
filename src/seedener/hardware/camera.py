@@ -4,13 +4,16 @@ import RPi.GPIO as GPIO
 
 from PIL import Image
 from seedener.models import Singleton
-from seedener.hardware.pivideostream import PiVideoStream
 from seedener.models.settings import SettingsConstants
 
+
 if GPIO.RPI_INFO['P1_REVISION'] == 3:
-	from picamera import PiCamera as picamera
+    from seedener.hardware.pivideostreamLegacy import PiVideoStream
+    from picamera import PiCamera as picamera
 else:
-	from picamera2 import Picamera2 as picamera
+    from seedener.hardware.pivideostream import PiVideoStream 
+    from picamera2 import Picamera2 as picamera
+
 
 class Camera(Singleton):
     _video_stream = None
@@ -43,7 +46,7 @@ class Camera(Singleton):
             return frame
         else:
             if frame is not None:
-                return Image.fromarray(frame.astype('uint8'), 'RGB').rotate(90 + self._camera_rotation)
+                return Image.fromarray(frame, 'RGB').rotate(90 + self._camera_rotation)
         return None
 
 
