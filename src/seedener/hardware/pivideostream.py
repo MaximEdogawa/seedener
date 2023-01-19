@@ -8,7 +8,7 @@ class PiVideoStream:
 	def __init__(self, resolution=(320, 240), framerate=32, format="bgr", **kwargs):
 		# initialize the camera
 		self.camera = Picamera2()
-		video_config = self.camera.create_video_configuration()		
+		video_config = self.camera.create_video_configuration(main={"size": (240, 240),"format": "RGB888"})		
 		self.camera.configure(video_config)
 		self.circBuffer = CircularOutput()
 		encoder = H264Encoder(1000000, repeat=True)
@@ -38,7 +38,7 @@ class PiVideoStream:
 		while True:
 			# grab the frame from the stream and clear the stream in
 			# preparation for the next frame
-			self.frame = self.camera.capture_array()
+			self.frame = self.camera.capture_array("main")
 			# if the thread indicator variable is set, stop the thread
 			# and resource camera resources
 			if self.should_stop:
