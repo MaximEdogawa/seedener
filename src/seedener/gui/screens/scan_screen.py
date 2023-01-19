@@ -61,7 +61,7 @@ class ScanScreen(BaseScreen):
             instructions_font = Fonts.get_font(GUIConstants.BODY_FONT_NAME, GUIConstants.BUTTON_FONT_SIZE)
             while self.keep_running:
                 start = timer()
-                frame = self.camera.read_video_stream()
+                frame = self.camera.read_video_stream(as_image=True)
                 if frame is not None:
                     scan_text = self.instructions_text
                     if self.decoder and self.decoder.get_percent_complete() > 0 and self.decoder.is_key:
@@ -107,9 +107,9 @@ class ScanScreen(BaseScreen):
             _run(). The live preview is an extra-complex case.
         """
         while True:
-            frame = self.camera.read_video_stream(as_image=True)
-            if frame is not None:
-                status = self.decoder.add_image(frame)
+            frameImage = self.camera.read_video_stream(as_image=True)
+            if frameImage is not None:
+                status = self.decoder.add_image(frameImage)
 
                 if status in (DecodeQRStatus.COMPLETE, DecodeQRStatus.INVALID):
                     self.camera.stop_video_stream_mode()

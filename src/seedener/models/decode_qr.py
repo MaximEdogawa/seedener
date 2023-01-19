@@ -7,9 +7,6 @@ from binascii import a2b_base64, b2a_base64
 from enum import IntEnum
 from pyzbar import pyzbar
 from pyzbar.pyzbar import ZBarSymbol
-from urtypes.crypto import Account, Output, Keypath, PathComponent, SCRIPT_EXPRESSION_TAG_MAP
-from urtypes.bytes import Bytes
-
 from . import QRType, Key
 from .settings import SettingsConstants
 
@@ -35,7 +32,7 @@ class DecodeQR:
         self.decoder = None
  
     def add_image(self, image):
-        data = DecodeQR.extract_qr_data(image, is_binary=True)
+        data = DecodeQR.extract_qr_data(image)
         if data == None:
             return DecodeQRStatus.FALSE
 
@@ -145,11 +142,11 @@ class DecodeQR:
         return self.qr_type == QRType.SETTINGS
 
     @staticmethod
-    def extract_qr_data(image, is_binary:bool = False) -> str:
+    def extract_qr_data(image) -> str:
         if image is None:
             return None
 
-        barcodes = pyzbar.decode(image, symbols=[ZBarSymbol.QRCODE], binary=is_binary)
+        barcodes = pyzbar.decode(image, symbols=[ZBarSymbol.QRCODE])
 
         for barcode in barcodes:
             # Only pull and return the first barcode

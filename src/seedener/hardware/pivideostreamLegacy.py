@@ -34,7 +34,7 @@ class PiVideoStream:
 		for f in self.stream:
 			# grab the frame from the stream and clear the stream in
 			# preparation for the next frame
-			self.frame = f.array
+			self.frame = f.array 
 			self.rawCapture.truncate(0)
 
 			# if the thread indicator variable is set, stop the thread
