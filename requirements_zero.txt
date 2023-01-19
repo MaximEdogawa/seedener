@@ -1,0 +1,10 @@
+clvm_tools_rs==0.1.22
+hsms
+numpy
+picamera
+Pillow==8.2.0
+six==1.16.0
+qrcode==7.3.1
+spidev
+pyzbar
+RPi.GPIO
