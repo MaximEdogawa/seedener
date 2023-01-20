@@ -871,5 +871,5 @@ class KeyReviewPassphraseView(View):
         
         elif button_data[selected_menu_num] == DONE:
             self.controller.inMemoryStore.finalize_pending_key()
-            return Destination(MainMenuView, clear_history=True)
+            return Destination(KeysMenuView, clear_history=True)
             

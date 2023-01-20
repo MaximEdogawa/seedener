@@ -253,3 +253,17 @@ class UnhandledExceptionView(View):
         ).display()
         
         return Destination(MainMenuView, clear_history=True)
+
+class NotYetImplementedView(View):
+    """
+        Temporary View to use during dev.
+    """
+    def run(self):
+        WarningScreen(
+            title="Work In Progress",
+            status_headline="Not Yet Implemented",
+            text="This is still on our to-do list!",
+            button_data=["Back to Main Menu"],
+        ).display()
+
+        return Destination(MainMenuView)

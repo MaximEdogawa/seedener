@@ -1,26 +1,22 @@
 # import the necessary packages
-from picamera2.encoders import H264Encoder
-from picamera2 import Picamera2 
-from picamera2.outputs import CircularOutput, FileOutput
+from picamera.array import PiRGBArray
+from picamera import PiCamera
 from threading import Thread
+import time
 
+# Modified from: https://github.com/jrosebr1/imutils
 class PiVideoStream:
 	def __init__(self, resolution=(320, 240), framerate=32, format="bgr", **kwargs):
 		# initialize the camera
-		self.camera = Picamera2()
-		video_config = self.camera.create_video_configuration(main={"size": (240, 240),"format": "RGB888"})		
-		self.camera.configure(video_config)
-		self.circBuffer = CircularOutput()
-		encoder = H264Encoder(1000000, repeat=True)
-		encoder.output = [self.circBuffer]
-		self.camera.encoder = encoder
-		self.camera.start()
-		self.camera.start_encoder()
+		self.camera = PiCamera(resolution=resolution, framerate=framerate, **kwargs)
+
+		# initialize the stream
+		self.rawCapture = PiRGBArray(self.camera, size=resolution)
+		self.stream = self.camera.capture_continuous(self.rawCapture,
+			format=format, use_video_port=True)
 
 		# initialize the frame and the variable used to indicate
 		# if the thread should be stopped
-		self.width = resolution[0]
-		self.height = resolution[1]
 		self.frame = None
 		self.should_stop = False
 		self.is_stopped = True
@@ -35,15 +31,18 @@ class PiVideoStream:
 
 	def update(self):
 		# keep looping infinitely until the thread is stopped
-		while True:
+		for f in self.stream:
 			# grab the frame from the stream and clear the stream in
 			# preparation for the next frame
-			self.frame = self.camera.capture_array("main")
+			self.frame = f.array 
+			self.rawCapture.truncate(0)
+
 			# if the thread indicator variable is set, stop the thread
 			# and resource camera resources
 			if self.should_stop:
 				print("PiVideoStream: closing everything")
-				self.camera.stop()
+				self.stream.close()
+				self.rawCapture.close()
 				self.camera.close()
 				self.should_stop = False
 				self.is_stopped = True

@@ -14,23 +14,34 @@ class InvalidKeyException(Exception):
     pass
 
 class Key:
-    def __init__(self, passphrase: str = "") -> None:
+    def __init__(self, priv_key: str = "", passphrase: str = "") -> None:
         self.paswordProtect: bool = False
         self.key_hash_bytes: bytes = None
-        self.priv_key: str = ""
+        self.priv_key: str = priv_key
         self.pub_key: str = ""
-        self._generate_key(passphrase)
+        if(self.priv_key==""):
+            self._generate_key(passphrase)
+
+        self._generate_pubKey()
+        self._generate_hash(passphrase)
         
     def _generate_key(self, passphrase: str = ""):
         try:
-            self.priv_key = subprocess.Popen(HSMGEN, shell = True, stdout=subprocess.PIPE).stdout.read().decode()
-            commadPubGen = HSMPK + " " + self.priv_key
-            self.pub_key = subprocess.Popen(commadPubGen, shell = True, stdout=subprocess.PIPE).stdout.read().decode()
-            self._generate_hash(passphrase)
+            self.priv_key = subprocess.Popen(HSMGEN, shell = True, stdout=subprocess.PIPE).stdout.read().decode()   
      
         except Exception as e:
             print(repr(e))
             raise InvalidKeyException(repr(e))
+
+    def _generate_pubKey(self):
+        try:
+            commadPubGen = HSMPK + " " + self.priv_key
+            self.pub_key = subprocess.Popen(commadPubGen, shell = True, stdout=subprocess.PIPE).stdout.read().decode()
+     
+        except Exception as e:
+            print(repr(e))
+            raise InvalidKeyException(repr(e))
+
 
     def _generate_hash(self, passphrase: str = ""):
         try:
