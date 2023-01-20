@@ -42,14 +42,16 @@ class DecodeQR:
         if data == None:
             return DecodeQRStatus.FALSE
 
-        qr_type = DecodeQR.detect_segment_type()
+        qr_type = DecodeQR.detect_segment_type(data)
 
-        if self.qr_type in [QRType.SPEND_BUNDLE, QRType.SECRECT__COMPONENT]:
-            self.decoder = KeyQrDecoder()          
+        if self.qr_type == None:
+            self.qr_type = qr_type
+            if self.qr_type in [QRType.SPEND_BUNDLE, QRType.SECRECT__COMPONENT]:
+                self.decoder = KeyQrDecoder()          
 
         elif self.qr_type != qr_type:
             raise Exception('QR Fragment Unexpected Type Change')
-        
+            
         if not self.decoder:
             # Did not find any recognizable format
             return DecodeQRStatus.INVALID
@@ -71,7 +73,7 @@ class DecodeQR:
         return rt
 
     @staticmethod
-    def detect_segment_type(s, wordlist_language_code=None):
+    def detect_segment_type(s):
         # print("-------------- DecodeQR.detect_segment_type --------------")
         # print(type(s))
         # print(len(s))
@@ -83,21 +85,22 @@ class DecodeQR:
                 # TODO: Convert the test suite rather than handle here?
                 s = s.decode('utf-8')
 
-            # PSBT
+            # Spend Bundle
             if re.search(QRType.SPEND_BUNDLE, s, re.IGNORECASE):
                 return QRType.SPEND_BUNDLE
-                
+            # Secret Component
             elif re.search(QRType.SECRECT__COMPONENT, s, re.IGNORECASE):
                 return QRType.SECRECT__COMPONENT
 
             # config data
             if "type=settings" in s:
                 return QRType.SETTINGS
-
+            # Is it byte data?
         except UnicodeDecodeError:
             # Probably this isn't meant to be string data; check if it's valid byte data
             # below.
             pass
+
         return QRType.INVALID
 
     def get_key_phrase(self):
@@ -175,11 +178,12 @@ class KeyQrDecoder(BaseSingleFrameQrDecoder):
         super().__init__()
         self.key_phrase = []
 
-    def add(self, segment, qr_type=QRType.KEY__KEYQR):
-        # `segment` data will either be bytes or str, depending on the qr_type
+    def add(self, key_phrase, qr_type=QRType.KEY__KEYQR):
+        # `key_phrase` data will either be bytes or str, depending on the qr_typ
+
         if qr_type == QRType.SECRECT__COMPONENT:
             try:
-                self.key_phrase = []
+                self.key_phrase = key_phrase
                 if len(self.key_phrase) > 0:
                     if self.is_62_char_phrase() == False:
                         return DecodeQRStatus.INVALID
@@ -193,9 +197,9 @@ class KeyQrDecoder(BaseSingleFrameQrDecoder):
 
         elif qr_type == QRType.SPEND_BUNDLE:
             try:
-                self.key_phrase = []
+                self.key_phrase = key_phrase
                 if len(self.key_phrase) > 0:
-                    if self.is_92_char_phrase() == False:
+                    if self.is241_char_phrase() == False:
                         return DecodeQRStatus.INVALID
                     self.complete = True
                     self.collected_segments = 1
@@ -217,9 +221,10 @@ class KeyQrDecoder(BaseSingleFrameQrDecoder):
         if len(self.key_phrase) == 62:
             return True
         return False
-    # Spend Bundle 92 
+    # Spend Bundle 241
+    # TODO: Find a way to check for Spend Bundle the right way
     def is_92_char_phrase(self):
-        if len(self.key_phrase) == 92:
+        if len(self.key_phrase) == 241:
             return True
         return False
 

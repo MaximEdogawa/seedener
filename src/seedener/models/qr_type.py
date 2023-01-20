@@ -6,7 +6,7 @@ class QRType:
     KEY__COMPACTKEYQR = "key__compactkeyqr"
     KEY__UR2 = "key__ur2"
     SECRECT__COMPONENT = "se1"
-    SPEND_BUNDLE= "bls"
+    SPEND_BUNDLE= ""
 
     SETTINGS = "settings"
 

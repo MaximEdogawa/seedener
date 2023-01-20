@@ -30,16 +30,18 @@ class ScanView(View):
                     self.controller.inMemoryStore.set_pending_key(
                         Key(priv_key=key_phrase)
                     )
-                    if self.settings.get_value(SettingsConstants.SETTING__PASSPHRASE) == SettingsConstants.OPTION__REQUIRED:
-                        from seedener.views.key_views import KeyAddPassphraseView
-                        return Destination(KeyAddPassphraseView)
+                    if self.settings.get_value(SettingsConstants. SETTING__PRIVACY_WARNINGS) == SettingsConstants.OPTION__REQUIRED:
+                        from seedener.views.key_views import KeyWarningView
+                        return Destination(KeyWarningView)
                     else:
                         return Destination(KeyFinalizeView)
             elif self.decoder.is_spendBundle:
+                #TODO: Write a class for unsigned spendbundles to be saved in Memory
                 spendBundle = self.decoder.get_key_phrase()
                 if not spendBundle:
                      raise Exception("Spend bundle is not valid!")
                 else:
+                #TODO: Implement Signing Screen for Spend Bundles
                     return Destination(NotYetImplementedView)
             else:
                 return Destination(NotYetImplementedView)
