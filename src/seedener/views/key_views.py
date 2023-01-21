@@ -440,7 +440,6 @@ class KeyExportPubTypeView(View):
         self.key = self.controller.get_key(key_num)
 
     def run(self):
-        num_modules_compact = 25
         fingerprint = self.key.get_fingerprint()[:10]+"..."
         ret = WarningScreen(
             title="Caution",

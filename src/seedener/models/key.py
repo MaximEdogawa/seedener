@@ -19,6 +19,7 @@ class Key:
         self.key_hash_bytes: bytes = None
         self.priv_key: str = priv_key
         self.pub_key: str = ""
+        self.selected: bool = False
         if(self.priv_key==""):
             self._generate_key(passphrase)
 
@@ -69,6 +70,9 @@ class Key:
             return self.priv_key
         else:
             return ""
+    
+    def get_privateKey_forSigning(self):
+        return self.priv_key
 
     def get_pub(self):
         return self.pub_key
@@ -99,3 +103,9 @@ class Key:
         if isinstance(other, Key):
             return self.priv_key == other.priv_key
         return False
+
+    def getSelected(self):
+        return self.selected
+    
+    def setSelected(self, selected: bool = False):
+        self.selected= selected

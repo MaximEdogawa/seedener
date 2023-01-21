@@ -199,7 +199,7 @@ class KeyQrDecoder(BaseSingleFrameQrDecoder):
             try:
                 self.key_phrase = key_phrase
                 if len(self.key_phrase) > 0:
-                    if self.is241_char_phrase() == False:
+                    if self.is_spendBundle_char_phrase() == False:
                         return DecodeQRStatus.INVALID
                     self.complete = True
                     self.collected_segments = 1
@@ -209,7 +209,7 @@ class KeyQrDecoder(BaseSingleFrameQrDecoder):
             except Exception as e:
                 return DecodeQRStatus.INVALID
         else:
-            return DecodeQRStatus.INVALID
+            return DecodeQRStatus.INVALID  
 
     def get_key_phrase(self):
         if self.complete:
@@ -223,8 +223,10 @@ class KeyQrDecoder(BaseSingleFrameQrDecoder):
         return False
     # Spend Bundle 241
     # TODO: Find a way to check for Spend Bundle the right way
-    def is_92_char_phrase(self):
-        if len(self.key_phrase) == 241:
+    # Data limit of qr codes are 7089 numberic characters split up spend bundles into 3 qr codes witha length of 15949
+    # Data has to be appended from more than one qr code
+    def is_spendBundle_char_phrase(self):
+        if len(self.key_phrase) >= 62 and len(self.key_phrase)<=7089:
             return True
         return False
 

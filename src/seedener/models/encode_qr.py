@@ -33,6 +33,8 @@ class EncodeQR:
         # QR formats
         if  self.qr_type == QRType.KEY__KEYQR:
             self.encoder = KeyQrEncoder(key_phrase=self.key_phrase)
+        elif self.qr_type == QRType.BUNDLE__QR:
+            self.encoder = KeyQrEncoder(key_phrase=self.key_phrase)
         else:
             raise Exception('QR Type not supported')
 

@@ -7,7 +7,7 @@ from .view import View, Destination, BackStackView, MainMenuView, NotYetImplemen
 
 from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, settings_screens)
 from seedener.models.settings import SettingsConstants, SettingsDefinition
-from seedener.models import DecodeQR, Key
+from seedener.models import DecodeQR, Key, Bundle
 
 class ScanView(View):
     def run(self):
@@ -36,17 +36,20 @@ class ScanView(View):
                     else:
                         return Destination(KeyFinalizeView)
             elif self.decoder.is_spendBundle:
-                #TODO: Write a class for unsigned spendbundles to be saved in Memory
                 spendBundle = self.decoder.get_key_phrase()
                 if not spendBundle:
                      raise Exception("Spend bundle is not valid!")
                 else:
+                    #TODO: Implement seperation of qr code to append and combine spend bundle of large sizeqr 
+                    self.controller.bundleStore.set_pending_bundle(
+                        Bundle(unsigned_bundle=spendBundle)
+                    )
                 #TODO: Implement Signing Screen for Spend Bundles
                     return Destination(NotYetImplementedView)
             else:
                 return Destination(NotYetImplementedView)
  
-        return Destination(MainMenuView)
+        return Destination(BackStackView)
 
 class SettingsUpdatedView(View):
     def __init__(self, config_name: str):
