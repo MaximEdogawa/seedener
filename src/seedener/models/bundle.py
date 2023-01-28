@@ -45,6 +45,3 @@ class Bundle:
 
     def isSigned(self):
         return self.finilized
-
-    def appendBundleSubString(self , substring: str=""):
-        self.unsigned_bundle+=substring
