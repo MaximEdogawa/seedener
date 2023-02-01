@@ -39,16 +39,21 @@ class ScanView(View):
                         return Destination(KeyFinalizeView)
 
             elif self.decoder.is_spendBundle:
-                spendBundle = self.decoder.get_spend_bundle() 
+                spendBundle = self.decoder.get_spend_bundle()
+                
                 if not spendBundle:
                      raise Exception("Spend bundle is not valid!") 
                 else:
-                    #TODO: Implement seperation of qr code to append and combine spend bundle of large sizeqr  
                     self.controller.bundleStore.set_pending_bundle(
-                        Bundle(unsigned_bundle=spendBundle)
+                            Bundle(unsigned_bundle=spendBundle)
                     )
-                     #TODO: Implement Signing Screen for Spend Bundles
-                    return Destination(NotYetImplementedView)
+                    if self.decoder.get_spend_bundle_hash()==self.controller.bundleStore.get_pending_bundle().get_unsigned_bundle_hash():
+                        self.controller.bundleStore.finalize_pending_bundle()
+                        #TODO: Implement Signing Screen for Spend Bundles
+                        from seedener.views.bundle_views import BundleOptionsView
+                        return Destination(BundleOptionsView)
+                    else:
+                        return Destination(NotYetImplementedView)                        
             else:
                 return Destination(NotYetImplementedView)
 

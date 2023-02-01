@@ -111,7 +111,7 @@ class ScanScreen(BaseScreen):
             if frameImage is not None:
                 status = self.decoder.add_image(frameImage)
 
-                if status in (DecodeQRStatus.COMPLETE, DecodeQRStatus.INVALID):
+                if status == DecodeQRStatus.COMPLETE:
                     self.camera.stop_video_stream_mode()
                     break
                 

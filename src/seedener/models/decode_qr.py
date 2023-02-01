@@ -8,9 +8,18 @@ from binascii import a2b_base64, b2a_base64
 from enum import IntEnum
 from pyzbar import pyzbar
 from pyzbar.pyzbar import ZBarSymbol
-from . import QRType, Key
+from . import QRType
 from .settings import SettingsConstants
 
+from typing import List
+import subprocess
+import hashlib
+from binascii import hexlify
+
+PBKDF2_ROUNDS = 2048
+
+class InvalidBundleException(Exception):
+    pass
 
 logger = logging.getLogger(__name__)
 class DecodeQRStatus(IntEnum):
@@ -43,13 +52,19 @@ class DecodeQR:
         if data == None:
             return DecodeQRStatus.FALSE
 
-        qr_type = DecodeQR.detect_segment_type(data)
+        if type(data) == str:
+            # Should always be bytes, but the test suite has some manual datasets that
+            # TODO: Convert the test suite rather than handle here?
+            data=data.decode('utf-8')
+
+        header, payload = DecodeQR.decode_data(data)
+        qr_type = DecodeQR.detect_segment_type(data, header)
 
         if self.qr_type == None:
             self.qr_type = qr_type
             if self.qr_type in [QRType.SECRECT_COMPONENT]:
                 self.decoder = KeyQrDecoder()
-            elif self.qr_type in [QRType.SPEND_BUNDLE]:
+            elif self.qr_type in [QRType.QR_SEQUENCE_MODE]:
                 self.decoder = BundleQrDecoder()        
             
         if not self.decoder:
@@ -66,8 +81,8 @@ class DecodeQR:
             # it's already str data
             qr_str = data
 
-        if self.qr_type in [QRType.SPEND_BUNDLE]:
-            rt = self.decoder.add(data, self.qr_type)
+        if self.qr_type in [QRType.QR_SEQUENCE_MODE]:
+            rt = self.decoder.add(header, payload, self.qr_type)
         else:
             # All other formats use the same method signature
             rt = self.decoder.add(qr_str, self.qr_type)
@@ -77,26 +92,17 @@ class DecodeQR:
         return rt
 
     @staticmethod
-    def detect_segment_type(data):
+    def detect_segment_type(data, header= {}):
         #print("-------------- DecodeQR.detect_segment_type --------------")
         #print(type(data))
         #print(len(data))
-        header= {}
-        s: str = ""
         try:
-            # Convert to str data
-            if type(data) == bytes:
-                # Should always be bytes, but the test suite has some manual datasets that
-                # are strings.
-                # TODO: Convert the test suite rather than handle here?
-                header= DecodeQR.getHeaderType(data)
-                #
-            if header[QRType.SPEND_BUNDLE]:
-                return QRType.SPEND_BUNDLE 
+            if header[QRType.QR_SEQUENCE_MODE]:
+                return QRType.QR_SEQUENCE_MODE
+
             else:
                 # Secret Component
-                s = data.decode('utf-8')
-                if re.search(QRType.SECRECT_COMPONENT, s, re.IGNORECASE):
+                if re.search(QRType.SECRECT_COMPONENT, data, re.IGNORECASE):
                    return QRType.SECRECT_COMPONENT 
         
             # config data
@@ -109,29 +115,17 @@ class DecodeQR:
             pass
 
         return QRType.INVALID
-    @staticmethod
-    def getHeaderType(data):
-        content = b32decode(data.decode('ascii').replace('%', '=').encode('ascii'))
-        cursor = 0
-        header = {}
-        header_size = { 'chunk': 7 , 'chunks': 7}
-        for k,size in header_size.items():
-            header[k] = int.from_bytes(content[cursor:cursor+size], 'big')
-            cursor += size
-
-        return header
 
     @staticmethod
     def decode_data(data):
         content = b32decode(data.decode('ascii').replace('%', '=').encode('ascii'))
         cursor = 0
         header = {}
-        header_size = { 'chunk': 7 , 'chunks': 7 }
+        header_size = { QRType.QR_SEQUENCE_MODE: 1 , QRType.BUNDLE_CHUNK: 7 , QRType.BUNDLE_TOTAL_CHUNKS: 7}
         for k,size in header_size.items():
             header[k] = int.from_bytes(content[cursor:cursor+size], 'big')
             cursor += size
         payload = content[cursor:]
-
         return header, payload
 
     def get_key_phrase(self):
@@ -140,6 +134,24 @@ class DecodeQR:
 
     def get_spend_bundle(self):
         return self.decoder.get_spend_bundle()
+    
+    def get_spend_bundle_hash(self):
+        return self.decoder.get_spend_bundle_hash()
+    
+    def _generate_hash(self,bundle_bytes: bytes=None ): 
+        try:
+            bundle_hash_bytes = hashlib.pbkdf2_hmac(
+                "sha512",
+                bundle_bytes.encode("utf-8"),
+                '',
+                PBKDF2_ROUNDS,
+                64, 
+            )
+        except Exception as e:
+            print(repr(e))
+            raise InvalidBundleException(repr(e))
+        
+        return bundle_hash_bytes 
 
     def get_percent_complete(self) -> int:
         if not self.decoder:
@@ -171,7 +183,7 @@ class DecodeQR:
     @property
     def is_spendBundle(self):
         return self.qr_type in [
-            QRType.SPEND_BUNDLE,
+            QRType.QR_SEQUENCE_MODE,
         ] 
 
     @property
@@ -183,7 +195,6 @@ class DecodeQR:
         if image is None:
             return None
 
-        ##barcodes = pyzbar.decode(image, symbols=[ZBarSymbol.QRCODE])
         barcodes = pyzbar.decode(image, symbols=[ZBarSymbol.CODE128, ZBarSymbol.QRCODE])
 
         for barcode in barcodes:
@@ -247,20 +258,36 @@ class BundleQrDecoder(BaseQrDecoder):
     def __init__(self):
         super().__init__()
         self.spend_bundle = []
+        self.spend_bundle_hash : bytes = None
     
-    def add(self, data, qr_type=QRType.SPEND_BUNDLE):
-        if qr_type == QRType.SPEND_BUNDLE:
+    def add(self, header, payload, qr_type=QRType.QR_SEQUENCE_MODE):
+        if qr_type == QRType.QR_SEQUENCE_MODE:
             #TODO: Review decode logic for spend bundle to be faster
-            header, payload = DecodeQR.decode_data(data)
-            chunk_seq = header['chunk']-1
-            if(self.total_segments == None):
-                self.total_segments=int(header['chunks'])
-                self.spend_bundle  = ["" for x in range(self.total_segments)]
-            #TODO: Review code 
-            if self.spend_bundle[chunk_seq]=='' and payload.decode('utf-8') != '':
-                self.spend_bundle[chunk_seq] = payload.decode('utf-8')
-                self.collected_segments=self.collected_segments+1 
-                print("Added "+ str(self.collected_segments) +" of "+ str(self.total_segments)+" Chunks")
+            try:
+                if header[QRType.QR_SEQUENCE_MODE]==QRType.MODE_CHUNK:
+                    if type(payload) == bytes:
+                        payload = payload.decode('utf-8')
+
+                    if(self.total_segments == None):
+                        self.total_segments=int(header[QRType.BUNDLE_TOTAL_CHUNKS])
+                        self.spend_bundle  = ["" for x in range(self.total_segments)]
+                    #TODO: Review code 
+                    chunk_index = header[QRType.BUNDLE_CHUNK]-1
+                    if self.spend_bundle[chunk_index]=='' and payload != '':
+                        self.spend_bundle[chunk_index] = payload
+                        self.collected_segments=self.collected_segments+1 
+                        print("Added "+ str(self.collected_segments) +" of "+ str(self.total_segments)+" Chunks")
+
+                elif header[QRType.QR_SEQUENCE_MODE]==QRType.MODE_HASH:
+                    if type(payload) == str:
+                        payload = payload.encode('utf-8')
+                    if self.spend_bundle_hash==None and payload != '':
+                        self.spend_bundle_hash = payload
+                        self.collected_segments=self.collected_segments+1 
+                        print("Added Controll Hash of Chunks")
+
+            except Exception as e:
+                return DecodeQRStatus.INVALID
 
             if(self.collected_segments==self.total_segments):
                 self.complete = True
@@ -270,10 +297,16 @@ class BundleQrDecoder(BaseQrDecoder):
     def get_spend_bundle(self):
         if self.complete:
             bundle_str: str=''
-            bund_len = len(self.spend_bundle[:])-1
-            while(bund_len >= 0):
-                bundle_str+=self.spend_bundle[bund_len]
-                bund_len -= 1
+            bundle_len = len(self.spend_bundle[:])-1
+            while(bundle_len >= 0):
+                bundle_str+=self.spend_bundle[bundle_len]
+                bundle_len -= 1
             return bundle_str
         return []
-
+    
+    def get_spend_bundle_hash(self):
+        if self.complete:
+            return self.spend_bundle_hash 
+        return
+    
+    

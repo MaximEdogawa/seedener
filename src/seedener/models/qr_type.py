@@ -7,7 +7,12 @@ class QRType:
     KEY__COMPACTKEYQR = "key__compactkeyqr"
     KEY__UR2 = "key__ur2"
     SECRECT_COMPONENT = "se1"
-    SPEND_BUNDLE= "chunk"
+    QR_SEQUENCE_MODE = 'mode'
+    MODE_HASH = 2
+    MODE_CHUNK = 1
+    BUNDLE_CHUNK = 'chunk'
+    BUNDLE_TOTAL_CHUNKS = 'chunks'
+
 
     SETTINGS = "settings"
 
