@@ -10,7 +10,7 @@ from seedener.models.encode_qr import EncodeQR
 from seedener.gui.screens.screen import QRDisplayScreen 
 from seedener.gui.components import FontAwesomeIconConstants, SeedenerCustomIconConstants
 from seedener.gui.screens.screen import LoadingScreenThread, WarningScreen
-
+from seedener.gui.screens.bundle_screens import BundleExportQrDisplayLoopScreen
 
 class BundleMenuView(View):
         def __init__(self):
@@ -95,7 +95,11 @@ class BundleExportView(View):
             self.bundle = self.controller.get_bundle(bundle_num)
 
         def run(self):
-            fingerprint = self.bundle.get_signed_bundle[:10]+ "..."
+            if(self.bundle.isSigned()):
+                fingerprint = self.bundle.get_signed_bundle()[:10]+ "..."
+            else:
+                fingerprint = self.bundle.get_unsigned_bundle()[:10]+ "..."
+            
             ret = WarningScreen(
                 title="Caution",
                 status_headline="You will display the spend bundle of:",
@@ -106,31 +110,34 @@ class BundleExportView(View):
             if ret == RET_CODE__BACK_BUTTON:
                 return Destination(BackStackView)
             else:
-                return Destination(BundleSignedExportQRDisplayView, view_args=dict(bundle_num=self.bundle_num))
+                return Destination(BundleExportQRDisplayView, view_args=dict(bundle_num=self.bundle_num))
 
-class BundleSignedExportQRDisplayView(View):
+class BundleExportQRDisplayView(View):
     def __init__(self, bundle_num: int):
         super().__init__()
         self.bundle = self.controller.get_bundle(bundle_num)
-
-        qr_density = self.settings.get_value(SettingsConstants.SETTING__QR_DENSITY)
-        qr_type = QRType.BUNDLE__QR
+        self.header_size = { 'mode':1, 'chunk': 7, 'chunks': 7}
+        self.bundle_phrase: str= ''
+        self.qr_density = self.settings.get_value(SettingsConstants.SETTING__QR_DENSITY)
+        self.qr_type = QRType.BUNDLE__QR
+        self.bundle_num =bundle_num
 
         if(self.bundle.isSigned()):
-            bundle_phrase = self.bundle.get_signed_bundle()
+            self.bundle_phrase = self.bundle.get_signed_bundle()
         else:
-            bundle_phrase = self.bundle.get_unsigned_bundle()
+            self.bundle_phrase = self.bundle.get_unsigned_bundle()
  
-        self.qr_encoder = EncodeQR(
-            key_phrase=bundle_phrase,  
-            qr_type=qr_type, 
-            qr_density=qr_density,
+    def run(self):
+        BundleExportQrDisplayLoopScreen(  
+            bundle_phrase=self.bundle_phrase,
+            qr_density=self.qr_density,
+            qr_type=self.qr_type
         )
 
-    def run(self):
-        QRDisplayScreen(qr_encoder=self.qr_encoder).display()  
-        return Destination(MainMenuView)
+        return Destination(BundleOptionsView, view_args=dict(bundle_num = self.bundle_num))
 
+
+    
 class BundleSignSelectKeysView(View):
     def __init__(self, bundle_num: int):
         super().__init__()
@@ -208,4 +215,5 @@ class SigneBundleView (View):
         if ret == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
         else:
-            return Destination(BundleSignedExportQRDisplayView, view_args=dict(bundle_num=self.bundle_num))
+            return Destination(BundleExportQRDisplayView, view_args=dict(bundle_num=self.bundle_num))
+

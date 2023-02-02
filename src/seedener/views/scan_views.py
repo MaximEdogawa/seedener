@@ -9,8 +9,6 @@ from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, setti
 from seedener.models.settings import SettingsConstants, SettingsDefinition
 from seedener.models import DecodeQR, Key, Bundle
 
-SPEND_BUNLDE_LENGTH = 15789
-
 class ScanView(View):
     def run(self):
         from seedener.gui.screens.scan_screen import ScanScreen 
