@@ -58,7 +58,7 @@ class Bundle:
         try:
             self.unsigned_bundle_hash = hashlib.pbkdf2_hmac(
                 "sha512",
-                self.unsigned_bundle.encode("utf-8"),
+                bytes(self.unsigned_bundle,'utf-8'),
                 bytes('','utf-8'),
                 PBKDF2_ROUNDS,
                 64,

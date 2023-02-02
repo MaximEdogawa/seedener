@@ -283,13 +283,12 @@ class BundleQrDecoder(BaseQrDecoder):
                         payload = payload.encode('utf-8')
                     if self.spend_bundle_hash==None and payload != '':
                         self.spend_bundle_hash = payload
-                        self.collected_segments=self.collected_segments+1 
                         print("Added Controll Hash of Chunks")
 
             except Exception as e:
                 return DecodeQRStatus.INVALID
 
-            if(self.collected_segments==self.total_segments):
+            if(self.collected_segments==self.total_segments and self.spend_bundle_hash !=''):
                 self.complete = True
                 print("Chunks Complete!")
                 return DecodeQRStatus.COMPLETE

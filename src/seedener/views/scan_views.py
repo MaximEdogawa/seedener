@@ -50,8 +50,8 @@ class ScanView(View):
                     if self.decoder.get_spend_bundle_hash()==self.controller.bundleStore.get_pending_bundle().get_unsigned_bundle_hash():
                         self.controller.bundleStore.finalize_pending_bundle()
                         #TODO: Implement Signing Screen for Spend Bundles
-                        from seedener.views.bundle_views import BundleOptionsView
-                        return Destination(BundleOptionsView)
+                        from seedener.views.bundle_views import BundleMenuView
+                        return Destination(BundleMenuView)
                     else:
                         return Destination(NotYetImplementedView)                        
             else:
