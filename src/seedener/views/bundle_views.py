@@ -175,8 +175,8 @@ class BundleSignSelectKeysView(View):
         button_data.append("Sign with selected Keys")
 
         if len(self.keys) > 0 and selected_menu_num < len(self.keys): 
-            if(key["isSelected"]):
-                self.controller.get_key(selected_menu_num).setSelected(False) 
+            if(self.keys[selected_menu_num]["isSelected"]):
+                self.controller.get_key(selected_menu_num).setSelected(False)
                 return Destination(BundleSignSelectKeysView, view_args=dict(bundle_num=self.bundle_num))
             else:
                 self.controller.get_key(selected_menu_num).setSelected(True) 
@@ -202,23 +202,35 @@ class SigneBundleView (View):
             })
 
     def run(self):
-        self.loading_screen = LoadingScreenThread(text="Signing Bundle with Key:")
-        self.loading_screen.start()
+        
         key_num=0
-        #TODO: Add error control if one signed spend bundle is empty. Show Error screen to user  
         for key in self.keys:
             if(key["isSelected"]):
-                self.bundle._signBundle(self.controller.get_key(key_num).get_privateKey_forSigning())
-            
+                self.loading_screen = LoadingScreenThread(text="Signing with key #"+str(key_num+1)+":")
+                self.loading_screen.start()
+                keyCorrect=self.bundle._signBundle(self.controller.get_key(key_num).get_privateKey_forSigning())
+                if keyCorrect==False:
+                    self.loading_screen.stop()
+                    ret = WarningScreen(
+                        title="Error key #"+str(key_num+1)+"!",
+                        status_headline="Unsigned bundle was not signed with this key pair",
+                        text= "Signing will continue without this key!",
+                        button_data=["I Understand"],
+                    ).display()
+                else:
+                    self.loading_screen.stop()
+
             key_num+=1
 
         if self.bundle.get_is_signed_bundle():
+            self.loading_screen = LoadingScreenThread(text="Merging vBundle Parts:")
+            self.loading_screen.start()
             self.bundle._mergeSignedBundles()
             self.loading_screen.stop()
             if(self.bundle.isFinilized()):
                 fingerprint= self.bundle.get_finilized_signed_bundle()[:15]+ "..."
                 ret = WarningScreen(
-                    title="Signing of Spend Bundle finished!",
+                    title="Signing finished!",
                     status_headline="You will display the signed Spend Bundle:",
                     text= fingerprint,
                     button_data=["I Understand"],
@@ -226,7 +238,6 @@ class SigneBundleView (View):
             else:
                 self.bundle.clear_signed_bundle_list()
                 ret=RET_CODE__BACK_BUTTON
-
         else:
             self.loading_screen.stop()
             ret=RET_CODE__BACK_BUTTON

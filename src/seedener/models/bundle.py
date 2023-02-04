@@ -19,7 +19,8 @@ class Bundle:
         self.unsigned_bundle: str = unsigned_bundle
         self.unsigned_bundle_hash: bytes = None
         self.signed_bundle_list: List[str] = []
-        self.is_signed_bundle=False
+        self.is_signed_part=False
+        self.signed_bundle=False
         self.finilized_signed_bundle: str = ""
         self.finilized: bool = False
         self._generate_hash()        
@@ -32,7 +33,6 @@ class Bundle:
         except Exception as e:
             print(repr(e))
             raise InvalidBundleException(repr(e))
-
         temp_unsigned_bundle.seek(0)
 
         try:
@@ -42,7 +42,7 @@ class Bundle:
             raise InvalidBundleException(repr(e))
         
         temp_priv_key.seek(0)
-        
+
         if type(self.unsigned_bundle)==bytes:
             self.unsigned_bundle=self.unsigned_bundle.decode('utf-8')
             
@@ -58,14 +58,18 @@ class Bundle:
             print(repr(e))
             raise InvalidBundleException(repr(e))
 
-        #TODO:Write error handling if signed_bundle is empty. Spend bunlde is not signed with pubkey of privke.
-        if(signed_bundle==b''):
-            self.is_signed_bundle=False
-        else:
-            self.is_signed_bundle=True
+        if(signed_bundle!=b''):
+            self.is_signed_part=True
+            self.signed_bundle=True
             self.signed_bundle_list.append(signed_bundle.decode('utf-8'))
-
+        else:
+            self.is_signed_part=False
+           
         temp_priv_key.close()
+        return self.is_signed_part
+
+    def get_is_signed_bundle(self):
+        return self.signed_bundle
 
     def _mergeSignedBundles(self):
         temp_unsigned_bundle = tempfile.NamedTemporaryFile('w+t',suffix='.unsigned')
@@ -74,16 +78,16 @@ class Bundle:
         except Exception as e:
             print(repr(e))
             raise InvalidBundleException(repr(e))
-        
-        temp_unsigned_bundle.seek(0)
+            
+        #TODO: Review code if there are some leftover data of temp files
         commandMerge=HSMMERGE + temp_unsigned_bundle.name
-
+        temp_unsigned_bundle.seek(0)
+        # Create temp file list
         files = []
         for i in range(len(self.signed_bundle_list)):
             f = tempfile.NamedTemporaryFile('w+t',suffix='_'+str(i+1)+'.sig')
             f.write(self.signed_bundle_list[i])
             f.seek(0)
-            print(f.read())
             files.append(f)
             commandMerge+=" "+ f.name
         try:
@@ -91,20 +95,16 @@ class Bundle:
         except Exception as e:
             print(repr(e))
             raise InvalidBundleException(repr(e))
-        if self.finilized_signed_bundle=="":
-            self.finilized=False
-        else:
+
+        if self.finilized_signed_bundle!="":
             self.finilized=True
-
-
+        else:
+            self.finilized=False
 
         #Close all temp files
         list(map(lambda f: f.close(), files))
         temp_unsigned_bundle.close()
     
-    def get_is_signed_bundle(self):
-        return self.is_signed_bundle
-
     def get_finilized_signed_bundle(self):
         return self.finilized_signed_bundle
 

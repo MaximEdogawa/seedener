@@ -279,14 +279,14 @@ class BundleQrDecoder(BaseQrDecoder):
                     if self.spend_bundle[chunk_index]=='' and payload != '':
                         self.spend_bundle[chunk_index] = payload
                         self.collected_segments=self.collected_segments+1 
-                        print("Added "+ str(self.collected_segments) +" of "+ str(self.total_segments)+" Chunks")
+                        #print("Added "+ str(self.collected_segments) +" of "+ str(self.total_segments)+" Chunks")
 
                 elif header[QRType.QR_SEQUENCE_MODE]==QRType.MODE_HASH:
                     if type(payload) == str:
                         payload = payload.encode('utf-8')
                     if self.spend_bundle_hash==None and payload != '':
                         self.spend_bundle_hash = payload
-                        print("Added Controll Hash of Chunks")
+                        #print("Added Controll Hash of Chunks")
 
             except Exception as e:
                 return DecodeQRStatus.INVALID
