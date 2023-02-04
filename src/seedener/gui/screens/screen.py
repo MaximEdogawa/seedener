@@ -1090,8 +1090,8 @@ class QRDisplayScreen(BaseScreen):
                 with self.renderer.lock:
                     self.renderer.show_image(image)
 
-                # Target n held frames per second before rendering next QR image
                 time.sleep(5/30.0)
+                # Target n held frames per second before rendering next QR image
 
     def __post_init__(self):
         from seedener.models.settings import Settings
@@ -1113,16 +1113,16 @@ class QRDisplayScreen(BaseScreen):
         while True:
             user_input = self.hw_inputs.wait_for(
                 [
-                    HardwareButtonsConstants.KEY_UP,
-                    HardwareButtonsConstants.KEY_DOWN,
-                    HardwareButtonsConstants.KEY_LEFT,
-                    HardwareButtonsConstants.KEY_RIGHT,
+                        HardwareButtonsConstants.KEY_UP,
+                        HardwareButtonsConstants.KEY_DOWN,
+                        HardwareButtonsConstants.KEY_LEFT,
+                        HardwareButtonsConstants.KEY_RIGHT,
                 ] + HardwareButtonsConstants.KEYS__ANYCLICK,
-                check_release=True,
+                 check_release=True,
                 release_keys=HardwareButtonsConstants.KEYS__ANYCLICK
             )
             if user_input == HardwareButtonsConstants.KEY_DOWN:
-                # Reduce QR code background brightness
+                 # Reduce QR code background brightness
                 self.qr_brightness.set_value(max(31, self.qr_brightness.cur_count - 31))
 
             elif user_input == HardwareButtonsConstants.KEY_UP:
@@ -1134,6 +1134,7 @@ class QRDisplayScreen(BaseScreen):
                 self.threads[-1].stop()
                 while self.threads[-1].is_alive():
                     time.sleep(0.01)
-                break
+                    break
+                return RET_CODE__BACK_BUTTON
 
         Settings.get_instance().set_value(SettingsConstants.SETTING__QR_BRIGHTNESS, self.qr_brightness.cur_count)

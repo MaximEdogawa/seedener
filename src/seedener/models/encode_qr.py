@@ -18,6 +18,7 @@ class EncodeQR:
     derivation: str = None
     qr_type: str = None
     qr_density: str = SettingsConstants.DENSITY__MEDIUM
+    chunk_size: int = 0
 
     def __post_init__(self):
         self.qr = QR()
@@ -33,6 +34,8 @@ class EncodeQR:
         # QR formats
         if  self.qr_type == QRType.KEY__KEYQR:
             self.encoder = KeyQrEncoder(key_phrase=self.key_phrase)
+        elif self.qr_type == QRType.BUNDLE__QR:
+            self.encoder = KeyQrEncoder(key_phrase=self.key_phrase,chunk_size=self.chunk_size)
         else:
             raise Exception('QR Type not supported')
 
@@ -53,8 +56,8 @@ class EncodeQR:
             return self.qr.qrimage_io(part, width, height, border, background_color=background_color)
 
     # TODO: Make these properties?
-    def is_complete(self):
-        return self.encoder.is_complete
+    def get_is_complete(self):
+        return self.encoder.get_is_complete()
 
     def get_qr_density(self):
         return self.qr_density
@@ -69,25 +72,39 @@ class BaseQrEncoder:
     def next_part(self) -> str:
         raise Exception("Not implemented in child class")
 
-    @property
-    def is_complete(self):
-        raise Exception("Not implemented in child class")
-
     def _create_parts(self):
         raise Exception("Not implemented in child class")
 
+    def get_is_complete(self):
+        raise Exception("Not implemented in child class")
+
 class KeyQrEncoder(BaseQrEncoder):
-    def __init__(self, key_phrase: str):
+    def __init__(self, key_phrase: str, chunk_size: int=0 ):
         super().__init__()
         self.key_phrase = key_phrase
+        self.chunk_size = chunk_size
+        self.is_complete = None
+        self.saved_key_phrase = key_phrase
+
 
     def seq_len(self):
         return 1
 
     def next_part(self):
         # To Make sure string is unicode UTF8 encode and decode
-        return self.key_phrase.encode().decode('UTF-8')
+        next_key_part: str=''
+        length=len(self.key_phrase)
+        if length>=self.chunk_size:
+            next_key_part= self.key_phrase[:self.chunk_size]
+            self.key_phrase= self.key_phrase[self.chunk_size:]
+            self.is_complete=False
+        else:
+            next_key_part=self.key_phrase
+            self.key_phrase=self.saved_key_phrase
+            self.is_complete=True
 
-    @property
-    def is_complete(self):
-        return True
+        return next_key_part.encode().decode('UTF-8')
+
+    def get_is_complete(self):
+        return self.is_complete
+    

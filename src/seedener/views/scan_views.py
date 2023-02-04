@@ -7,7 +7,7 @@ from .view import View, Destination, BackStackView, MainMenuView, NotYetImplemen
 
 from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, settings_screens)
 from seedener.models.settings import SettingsConstants, SettingsDefinition
-from seedener.models import DecodeQR, Key
+from seedener.models import DecodeQR, Key, Bundle
 
 class ScanView(View):
     def run(self):
@@ -25,7 +25,6 @@ class ScanView(View):
                     raise Exception("Key is not valid!")
                 else:
                     # Found a valid Secret Component! All new keys should be considered
-                    #   pending (might set a passphrase, keyXOR, etc) until finalized.
                     from .key_views import KeyFinalizeView
                     self.controller.inMemoryStore.set_pending_key(
                         Key(priv_key=key_phrase)
@@ -35,18 +34,28 @@ class ScanView(View):
                         return Destination(KeyWarningView)
                     else:
                         return Destination(KeyFinalizeView)
+
             elif self.decoder.is_spendBundle:
-                #TODO: Write a class for unsigned spendbundles to be saved in Memory
-                spendBundle = self.decoder.get_key_phrase()
+                spendBundle = self.decoder.get_spend_bundle()
+                
                 if not spendBundle:
-                     raise Exception("Spend bundle is not valid!")
+                     raise Exception("Spend bundle is not valid!") 
                 else:
-                #TODO: Implement Signing Screen for Spend Bundles
-                    return Destination(NotYetImplementedView)
+                    self.controller.bundleStore.set_pending_bundle(
+                            Bundle(unsigned_bundle=spendBundle)
+                    )
+                    if self.decoder.get_spend_bundle_hash()==self.controller.bundleStore.get_pending_bundle().get_unsigned_bundle_hash():
+                        self.controller.bundleStore.finalize_pending_bundle()
+                        #TODO: Implement Signing Screen for Spend Bundles
+                        from seedener.views.bundle_views import BundleMenuView
+                        return Destination(BundleMenuView)
+                    else:
+                        return Destination(NotYetImplementedView)                        
             else:
                 return Destination(NotYetImplementedView)
- 
+
         return Destination(MainMenuView)
+
 
 class SettingsUpdatedView(View):
     def __init__(self, config_name: str):

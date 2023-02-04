@@ -11,7 +11,7 @@ from seedener.hardware.microsd import MicroSD
 from seedener.views.screensaver import ScreensaverScreen
 from seedener.views.view import Destination, NotYetImplementedView, UnhandledExceptionView
 
-from .models import Key, KeyStorage, Settings, Singleton
+from .models import Key, KeyStorage, Bundle, BundleStorage, Settings, Singleton  
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ class Controller(Singleton):
     VERSION = "0.0.1"
     buttons: HardwareButtons = None
     inMemoryStore: KeyStorage = None
+    bundleStore: BundleStorage = None
     settings: Settings = None
     renderer: Renderer = None
     unverified_address = None
@@ -70,6 +71,7 @@ class Controller(Singleton):
         # models
         controller.settings = Settings.get_instance()
         controller.inMemoryStore = KeyStorage()
+        controller.bundleStore = BundleStorage()
         controller.microsd = MicroSD.get_instance()
         controller.microsd.start_detection()
 
@@ -94,6 +96,12 @@ class Controller(Singleton):
             return self.inMemoryStore.keys[key_num]
         else:
             raise Exception(f"There is no key_num {key_num}; only {len(self.inMemoryStore.keys)} in memory.")
+    
+    def get_bundle(self, bundle_num: int) -> Bundle:
+        if bundle_num < len(self.bundleStore.bundles):
+            return self.bundleStore.bundles[bundle_num]
+        else:
+            raise Exception(f"There is no bundle_num {bundle_num}; only {len(self.bundleStore.bundles)} in memory.")
 
 
     def discard_key(self, key_num: int):

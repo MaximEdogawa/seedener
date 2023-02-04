@@ -8,6 +8,7 @@ from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen)
 from seedener.gui.screens.tools_screens import ToolsImageEntropyLivePreviewScreen, ToolsImageEntropyFinalImageScreen
 from seedener.models.settings import SettingsConstants, SettingsDefinition
 from seedener.models.key import Key
+from seedener.views.bundle_views import BundleMenuView
 
 from seedener.views.key_views import KeyWarningView
 from .view import View, Destination, BackStackView
@@ -16,7 +17,8 @@ from .view import View, Destination, BackStackView
 class ToolsMenuView(View):
     def run(self):
         CREATE = ("Create key", FontAwesomeIconConstants.PLUS)
-        button_data = [CREATE]
+        SIGN = ("Sign bundle", FontAwesomeIconConstants.PEN)
+        button_data = [CREATE, SIGN]
         screen = ButtonListScreen(
             title="Tools",
             is_button_text_centered=False,
@@ -29,6 +31,9 @@ class ToolsMenuView(View):
 
         elif button_data[selected_menu_num] == CREATE:
             return Destination(ToolsCreateKeyView)
+
+        elif button_data[selected_menu_num] == SIGN:
+            return Destination(BundleMenuView)
 
 """****************************************************************************
     Create Key Views
@@ -81,3 +86,4 @@ class ToolsCreateKeyEntryView(View):
 
         # Cannot return BACK to this View
         return Destination(KeyWarningView, view_args=dict(key_num= None, passphrase=""), clear_history=True)
+
