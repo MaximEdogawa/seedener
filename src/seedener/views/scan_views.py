@@ -25,7 +25,6 @@ class ScanView(View):
                     raise Exception("Key is not valid!")
                 else:
                     # Found a valid Secret Component! All new keys should be considered
-                    #   pending (might set a passphrase, keyXOR, etc) until finalized.
                     from .key_views import KeyFinalizeView
                     self.controller.inMemoryStore.set_pending_key(
                         Key(priv_key=key_phrase)

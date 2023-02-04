@@ -64,8 +64,8 @@ class ScanScreen(BaseScreen):
                 frame = self.camera.read_video_stream(as_image=True)
                 if frame is not None:
                     scan_text = self.instructions_text
-                    if self.decoder and self.decoder.get_percent_complete() > 0 and self.decoder.is_key:
-                        scan_text = str(self.decoder.get_percent_complete()) + "% Complete"
+                    if self.decoder and self.decoder.get_percent_complete() > 0 and self.decoder.is_spendBundle:
+                        scan_text = str(int(self.decoder.get_percent_complete())) + "% Complete"
 
                     with self.renderer.lock:
                         if frame.width > self.render_width or frame.height > self.render_height:
