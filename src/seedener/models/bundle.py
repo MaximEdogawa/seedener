@@ -2,9 +2,12 @@ from typing import List
 import subprocess
 import hashlib
 from binascii import hexlify
+import tempfile
 
-HSMS = " | hsms -y -- nochunks" #Sign unsigned bundles
-HSMMERGE = "hsmmerge" #Merge signed bundles
+HSMS = "hsms -y --nochunks " #Sign unsigned bundles
+HSMMERGE = "hsmmerge " #Merge signed bundles
+CAT = "cat "
+PIPE = " | "
 # Hashing Const
 PBKDF2_ROUNDS = 2048
 
@@ -15,34 +18,94 @@ class Bundle:
     def __init__(self, unsigned_bundle: str = "") -> None:
         self.unsigned_bundle: str = unsigned_bundle
         self.unsigned_bundle_hash: bytes = None
-        self.signed_bundle: str = ""
         self.signed_bundle_list: List[str] = []
+        self.is_signed_bundle=False
         self.finilized_signed_bundle: str = ""
         self.finilized: bool = False
         self._generate_hash()        
 
     def _signBundle(self, priv_key: str = ""):
-        commandSign=self.unsigned_bundle + HSMS + priv_key
+        temp_priv_key = tempfile.NamedTemporaryFile('w+t',suffix='.se')
+        temp_unsigned_bundle = tempfile.NamedTemporaryFile('w+t',suffix='.unsigned')
         try:
-            self.signed_bundle = subprocess.Popen(commandSign, shell = True, stdout=subprocess.PIPE).stdout.read().decode()
+            temp_unsigned_bundle.write(self.unsigned_bundle)
         except Exception as e:
             print(repr(e))
             raise InvalidBundleException(repr(e))
- 
-        self.signed_bundle_list.append(self.signed_bundle)
+
+        temp_unsigned_bundle.seek(0)
+
+        try:
+            temp_priv_key.write(priv_key)
+        except Exception as e:
+            print(repr(e))
+            raise InvalidBundleException(repr(e))
+        
+        temp_priv_key.seek(0)
+        
+        if type(self.unsigned_bundle)==bytes:
+            self.unsigned_bundle=self.unsigned_bundle.decode('utf-8')
+            
+        commandSign= CAT + temp_unsigned_bundle.name + PIPE + HSMS + temp_priv_key.name
+
+        try:
+            proc = subprocess.Popen(commandSign, shell = True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            proc.wait()
+            proc.stdin.close()
+            signed_bundle = proc.stdout.read()
+            print('\n')
+        except Exception as e:
+            print(repr(e))
+            raise InvalidBundleException(repr(e))
+
+        #TODO:Write error handling if signed_bundle is empty. Spend bunlde is not signed with pubkey of privke.
+        if(signed_bundle==b''):
+            self.is_signed_bundle=False
+        else:
+            self.is_signed_bundle=True
+            self.signed_bundle_list.append(signed_bundle.decode('utf-8'))
+
+        temp_priv_key.close()
 
     def _mergeSignedBundles(self):
-        commandMerge=HSMMERGE
-        for i in len(self.signed_bundle_list):
-            commandMerge+=" "+self.signed_bundle_list[i]
+        temp_unsigned_bundle = tempfile.NamedTemporaryFile('w+t',suffix='.unsigned')
         try:
-            self.finilized_signed_bundle = subprocess.Popen(commandMerge, shell = True, stdout=subprocess.PIPE).stdout.read().decode()
-            self.finilized=True
+            temp_unsigned_bundle.write(self.unsigned_bundle)
         except Exception as e:
             print(repr(e))
             raise InvalidBundleException(repr(e))
+        
+        temp_unsigned_bundle.seek(0)
+        commandMerge=HSMMERGE + temp_unsigned_bundle.name
+
+        files = []
+        for i in range(len(self.signed_bundle_list)):
+            f = tempfile.NamedTemporaryFile('w+t',suffix='_'+str(i+1)+'.sig')
+            f.write(self.signed_bundle_list[i])
+            f.seek(0)
+            print(f.read())
+            files.append(f)
+            commandMerge+=" "+ f.name
+        try:
+            self.finilized_signed_bundle = subprocess.Popen(commandMerge, shell = True, stdout=subprocess.PIPE).stdout.read().decode()
+        except Exception as e:
+            print(repr(e))
+            raise InvalidBundleException(repr(e))
+        if self.finilized_signed_bundle=="":
+            self.finilized=False
+        else:
+            self.finilized=True
+
+
+
+        #Close all temp files
+        list(map(lambda f: f.close(), files))
+        temp_unsigned_bundle.close()
     
-    def get_signed_bundle(self):
+    def get_is_signed_bundle(self):
+        return self.is_signed_bundle
+
+    def get_finilized_signed_bundle(self):
         return self.finilized_signed_bundle
 
     def get_unsigned_bundle(self):
@@ -51,7 +114,7 @@ class Bundle:
     def get_unsigned_bundle_hash(self):
         return self.unsigned_bundle_hash
 
-    def isSigned(self):
+    def isFinilized(self):
         return self.finilized
     
     def _generate_hash(self): 
@@ -66,3 +129,6 @@ class Bundle:
         except Exception as e:
             print(repr(e))
             raise InvalidBundleException(repr(e))
+    
+    def clear_signed_bundle_list(self):
+        self.signed_bundle_list.clear()

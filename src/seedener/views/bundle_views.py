@@ -17,14 +17,13 @@ class BundleMenuView(View):
             super().__init__()
             self.bundles = []
             for bundle in self.controller.bundleStore.bundles:
-                if(bundle.isSigned()):
-                    fingerprint= bundle.get_signed_bundle()
-                else:
+                if(bundle.isFinilized):
+                    fingerprint= bundle.get_finilized_signed_bundle()
                     fingerprint= bundle.get_unsigned_bundle()
 
                 self.bundles.append({
                     "fingerprint": fingerprint,
-                    "signed": bundle.isSigned()
+                    "signed": bundle.isFinilized()
                 })
 
         def run(self):
@@ -66,10 +65,10 @@ class BundleOptionsView(View):
             button_data = []
             button_data.append(EXPORT_BUNDLE)
 
-            if self.bundle.isSigned():
+            if self.bundle.isFinilized():
                 selected_menu_num = bundle_screens.BundleOptionsScreen(
                     button_data=button_data, 
-                    fingerprint=self.bundle.get_signed_bundle()[:15] + "...",
+                    fingerprint=self.bundle.get_finilized_signed_bundle()[:15] + "...",
                 ).display() 
             else:
                 button_data.append(SIGN_BUNDLE)
@@ -95,8 +94,8 @@ class BundleExportView(View):
             self.bundle = self.controller.get_bundle(bundle_num)
 
         def run(self):
-            if(self.bundle.isSigned()):
-                fingerprint = self.bundle.get_signed_bundle()[:10]+ "..."
+            if(self.bundle.isFinilized()):
+                fingerprint = self.bundle.get_finilized_signed_bundle()[:10]+ "..."
             else:
                 fingerprint = self.bundle.get_unsigned_bundle()[:10]+ "..."
             
@@ -122,8 +121,8 @@ class BundleExportQRDisplayView(View):
         self.qr_type = QRType.BUNDLE__QR
         self.bundle_num =bundle_num
 
-        if(self.bundle.isSigned()):
-            self.bundle_phrase = self.bundle.get_signed_bundle()
+        if(self.bundle.isFinilized()):
+            self.bundle_phrase = self.bundle.get_finilized_signed_bundle()
         else:
             self.bundle_phrase = self.bundle.get_unsigned_bundle()
  
@@ -157,11 +156,15 @@ class BundleSignSelectKeysView(View):
             return Destination(LoadKeyView, clear_history=True)
 
         button_data = []
+        SIGN_BUNDLE = ("Sign Spend Bundle", None, None, None, FontAwesomeIconConstants.PEN)
+
         for key in self.keys:
             if(key["isSelected"]):
                 button_data.append((key["fingerprint"][:15] + "...", SeedenerCustomIconConstants.CIRCLE_CHECK, "blue"))
             else:
-                button_data.append((key["fingerprint"][:15] + "...", SeedenerCustomIconConstants.CIRCLE_X, "blue"))
+                button_data.append((key["fingerprint"][:15] + "...", SeedenerCustomIconConstants.CIRCLE_CHECK, "gray"))
+
+        button_data.append(SIGN_BUNDLE)
 
         selected_menu_num = ButtonListScreen(
             title="Sign spend Bundle",
@@ -173,44 +176,61 @@ class BundleSignSelectKeysView(View):
 
         if len(self.keys) > 0 and selected_menu_num < len(self.keys): 
             if(key["isSelected"]):
-                return Destination(ToggleKeyForSigningView, view_args=dict(bundle_num=self.bundle_num, key_num=selected_menu_num, selected=False))
+                self.controller.get_key(selected_menu_num).setSelected(False) 
+                return Destination(BundleSignSelectKeysView, view_args=dict(bundle_num=self.bundle_num))
             else:
-                return Destination(ToggleKeyForSigningView, view_args=dict(bundle_num=self.bundle_num, key_num=selected_menu_num, selected=True))
+                self.controller.get_key(selected_menu_num).setSelected(True) 
+                return Destination(BundleSignSelectKeysView, view_args=dict(bundle_num=self.bundle_num))
 
         elif selected_menu_num == len(self.keys):
-            return Destination(SigneBundleView)
+            return Destination(SigneBundleView, view_args=dict(bundle_num=self.bundle_num))
 
         elif selected_menu_num == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView) 
 
-class ToggleKeyForSigningView(View):
-    def __init__(self, bundle_num: int, key_num: int, selected: bool=False):
-        self.controller.get_key(key_num).setSelected(selected) 
-        self.bundle_num=bundle_num
-    def run(self):
-        return Destination(BundleSignSelectKeysView, view_args=dict(bundle_num=self.bundle_num))
-
-
 class SigneBundleView (View):
     def __init__(self, bundle_num: int):
+        super().__init__()
         self.bundle_num = bundle_num
         self.bundle = self.controller.get_bundle(bundle_num)
+        self.keys = []
+        for key in self.controller.inMemoryStore.keys:
+            self.keys.append({
+                "fingerprint": key.get_fingerprint(),
+                "has_passphrase": key.getPasswordProtect(),
+                "isSelected": key.getSelected()
+            })
+
     def run(self):
         self.loading_screen = LoadingScreenThread(text="Signing Bundle with Key:")
         self.loading_screen.start()
-        for key in self.controller.inMemoryStore.keys:
+        key_num=0
+        #TODO: Add error control if one signed spend bundle is empty. Show Error screen to user  
+        for key in self.keys:
             if(key["isSelected"]):
-                self.bundle._signBundle(key.get_privateKey_forSigning)
+                self.bundle._signBundle(self.controller.get_key(key_num).get_privateKey_forSigning())
+            
+            key_num+=1
 
-        self.bundle._mergeSignedBundles()
-        self.loading_screen.stop()
-        fingerprint= self.bundle.get_signed_bundle()[:15]+ "..."
-        ret = WarningScreen(
-            title="Signing of Spend Bundle finished!",
-            status_headline="You will display the signed Spend Bundle:",
-            text= fingerprint,
-            button_data=["I Understand"],
-        ).display()
+        if self.bundle.get_is_signed_bundle():
+            self.bundle._mergeSignedBundles()
+            self.loading_screen.stop()
+            if(self.bundle.isFinilized()):
+                fingerprint= self.bundle.get_finilized_signed_bundle()[:15]+ "..."
+                ret = WarningScreen(
+                    title="Signing of Spend Bundle finished!",
+                    status_headline="You will display the signed Spend Bundle:",
+                    text= fingerprint,
+                    button_data=["I Understand"],
+                ).display()
+            else:
+                self.bundle.clear_signed_bundle_list()
+                ret=RET_CODE__BACK_BUTTON
+
+        else:
+            self.loading_screen.stop()
+            ret=RET_CODE__BACK_BUTTON
+
         
         if ret == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)

@@ -18,6 +18,8 @@ from binascii import hexlify
 
 PBKDF2_ROUNDS = 2048
 
+SECRET_COMPONENT_MAX_SIZE = 62
+
 class InvalidBundleException(Exception):
     pass
 
@@ -57,8 +59,7 @@ class DecodeQR:
             # TODO: Convert the test suite rather than handle here?
             data=data.decode('utf-8')
 
-        header, payload = DecodeQR.decode_data(data)
-        qr_type = DecodeQR.detect_segment_type(data, header)
+        qr_type = DecodeQR.detect_segment_type(data)
 
         if self.qr_type == None:
             self.qr_type = qr_type
@@ -82,6 +83,7 @@ class DecodeQR:
             qr_str = data
 
         if self.qr_type in [QRType.QR_SEQUENCE_MODE]:
+            header, payload = DecodeQR.decode_data(data)
             rt = self.decoder.add(header, payload, self.qr_type)
         else:
             # All other formats use the same method signature
@@ -92,18 +94,19 @@ class DecodeQR:
         return rt
 
     @staticmethod
-    def detect_segment_type(data, header= {}):
+    def detect_segment_type(data):
         #print("-------------- DecodeQR.detect_segment_type --------------")
         #print(type(data))
         #print(len(data))
+        if type(data)==bytes:
+            qr_str = data.decode('utf-8')
+            
         try:
-            if header[QRType.QR_SEQUENCE_MODE]:
-                return QRType.QR_SEQUENCE_MODE
-
+            if qr_str[:3]==QRType.SECRECT_COMPONENT:
+                return QRType.SECRECT_COMPONENT
             else:
-                # Secret Component
-                if re.search(QRType.SECRECT_COMPONENT, data, re.IGNORECASE):
-                   return QRType.SECRECT_COMPONENT 
+                return QRType.QR_SEQUENCE_MODE
+                 
         
             # config data
             #if "type=settings" in s:
@@ -250,7 +253,7 @@ class KeyQrDecoder(BaseSingleFrameQrDecoder):
 
     # Secret Component 62 
     def is_62_char_phrase(self):
-        if len(self.key_phrase) == 62:
+        if len(self.key_phrase) <= SECRET_COMPONENT_MAX_SIZE:
             return True
         return False
 
