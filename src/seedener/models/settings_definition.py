@@ -36,17 +36,6 @@ class SettingsConstants:
         (LANGUAGE__ENGLISH, "English"),
     ]
 
-    XCH_DENOMINATION__XCH = "XCH"
-    XCH_DENOMINATION__SATS = "sats"
-    XCH_DENOMINATION__THRESHOLD = "thr"
-    XCH_DENOMINATION__XCHSATSHYBRID = "hyb"
-    ALL_XCH_DENOMINATIONS = [
-        (XCH_DENOMINATION__XCH, "XCH-only"),
-        (XCH_DENOMINATION__SATS, "Sats-only"),
-        (XCH_DENOMINATION__THRESHOLD, "Threshold at 0.01"),
-        (XCH_DENOMINATION__XCHSATSHYBRID, "XCH | Sats hybrid"),
-    ]
-
     CAMERA_ROTATION__0 = 0
     CAMERA_ROTATION__90 = 90
     CAMERA_ROTATION__180 = 180
@@ -71,11 +60,9 @@ class SettingsConstants:
     # Key-related constants
     MAINNET = "M"
     TESTNET = "T"
-    REGTEST = "R"
     ALL_NETWORKS = [
         (MAINNET, "Mainnet"),
-        (TESTNET, "Testnet"),
-        (REGTEST, "Regtest")
+        (TESTNET, "Testnet")
     ]
 
     @classmethod
@@ -84,28 +71,7 @@ class SettingsConstants:
             return "main"
         elif network == SettingsConstants.TESTNET:
             return "test"
-        if network == SettingsConstants.REGTEST:
-            return "regtest"
     
-
-    SINGLE_SIG = "ss"
-    MULTISIG = "ms"
-    ALL_SIG_TYPES = [
-        (SINGLE_SIG, "Single Sig"),
-        (MULTISIG, "Multisig"),
-    ]
-
-    LEGACY_P2PKH = "leg"  # Intentionally excluded from ALL_SCRIPT_TYPES
-    NATIVE_SEGWIT = "nat"
-    NESTED_SEGWIT = "nes"
-    TAPROOT = "tr"
-    CUSTOM_DERIVATION = "cus"
-    ALL_SCRIPT_TYPES = [
-        (NATIVE_SEGWIT, "Native Segwit"),
-        (NESTED_SEGWIT, "Nested Segwit (legacy)"),
-        (TAPROOT, "Taproot"),
-        (CUSTOM_DERIVATION, "Custom Derivation"),
-    ]
 
     WORDLIST_LANGUAGE__ENGLISH = "en"
     WORDLIST_LANGUAGE__CHINESE_SIMPLIFIED = "zh_Hans_CN"
@@ -131,8 +97,6 @@ class SettingsConstants:
     SETTING__LANGUAGE = "language"
     SETTING__WORDLIST_LANGUAGE = "wordlist_language"
     SETTING__PERSISTENT_SETTINGS = "persistent_settings"
-    SETTING__COORDINATORS = "coordinators"
-    SETTING__XCH_DENOMINATION = "denomination"
 
     SETTING__NETWORK = "network"
     SETTING__QR_DENSITY = "qr_density"
@@ -335,15 +299,7 @@ class SettingsDefinition:
                       display_name="Persistent settings",
                       help_text="Store Settings on SD card.",
                       default_value=SettingsConstants.OPTION__DISABLED),
-
-
-        SettingsEntry(category=SettingsConstants.CATEGORY__SYSTEM,
-                      attr_name=SettingsConstants.SETTING__XCH_DENOMINATION,
-                      display_name="Denomination display",
-                      type=SettingsConstants.TYPE__SELECT_1,
-                      selection_options=SettingsConstants.ALL_XCH_DENOMINATIONS,
-                      default_value=SettingsConstants.XCH_DENOMINATION__THRESHOLD),
-     
+    
 
         # Advanced options
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
@@ -367,22 +323,6 @@ class SettingsDefinition:
                       display_name="Xpub export",
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
-
-        SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
-                      attr_name=SettingsConstants.SETTING__SIG_TYPES,
-                      display_name="Sig types",
-                      type=SettingsConstants.TYPE__MULTISELECT,
-                      visibility=SettingsConstants.VISIBILITY__ADVANCED,
-                      selection_options=SettingsConstants.ALL_SIG_TYPES,
-                      default_value=SettingsConstants.ALL_SIG_TYPES),
-
-        SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
-                      attr_name=SettingsConstants.SETTING__SCRIPT_TYPES,
-                      display_name="Script types",
-                      type=SettingsConstants.TYPE__MULTISELECT,
-                      visibility=SettingsConstants.VISIBILITY__ADVANCED,
-                      selection_options=SettingsConstants.ALL_SCRIPT_TYPES,
-                      default_value=[SettingsConstants.NATIVE_SEGWIT, SettingsConstants.NESTED_SEGWIT]),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__XPUB_DETAILS,

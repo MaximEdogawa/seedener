@@ -2,11 +2,10 @@
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 from threading import Thread
-import time
 
 # Modified from: https://github.com/jrosebr1/imutils
 class PiVideoStream:
-	def __init__(self, resolution=(320, 240), framerate=32, format="bgr", **kwargs):
+	def __init__(self, resolution=(240, 240), framerate=32, format="bgr", **kwargs):
 		# initialize the camera
 		self.camera = PiCamera(resolution=resolution, framerate=framerate, **kwargs)
 

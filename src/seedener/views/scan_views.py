@@ -8,6 +8,7 @@ from .view import View, Destination, BackStackView, MainMenuView, NotYetImplemen
 from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, settings_screens)
 from seedener.models.settings import SettingsConstants, SettingsDefinition
 from seedener.models import DecodeQR, Key, Bundle
+from .key_views import KeyWarningView, KeyFinalizeView
 
 class ScanView(View):
     def run(self):
@@ -25,12 +26,10 @@ class ScanView(View):
                     raise Exception("Key is not valid!")
                 else:
                     # Found a valid Secret Component! All new keys should be considered
-                    from .key_views import KeyFinalizeView
                     self.controller.inMemoryStore.set_pending_key(
                         Key(priv_key=key_phrase)
                     )
                     if self.settings.get_value(SettingsConstants. SETTING__PRIVACY_WARNINGS) == SettingsConstants.OPTION__REQUIRED:
-                        from seedener.views.key_views import KeyWarningView
                         return Destination(KeyWarningView)
                     else:
                         return Destination(KeyFinalizeView)
