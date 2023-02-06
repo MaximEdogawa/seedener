@@ -3,22 +3,19 @@ from textwrap import wrap
 
 from seedener.gui.components import FontAwesomeIconConstants, SeedenerCustomIconConstants
 
-from seedener.gui.screens.screen import LoadingScreenThread, WarningScreen
 from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen)
-from seedener.gui.screens.tools_screens import ToolsImageEntropyLivePreviewScreen, ToolsImageEntropyFinalImageScreen
-from seedener.models.settings import SettingsConstants, SettingsDefinition
-from seedener.models.key import Key
-from seedener.views.bundle_views import BundleMenuView
-
-from seedener.views.key_views import KeyWarningView
+from .bundle_views import BundleMenuView
+from .key_views import CreateKeyEntryView
 from .view import View, Destination, BackStackView
-
+from .scan_views import ScanView
 
 class ToolsMenuView(View):
     def run(self):
+        SCAN = ("Scan key",FontAwesomeIconConstants.QRCODE)
         CREATE = ("Create key", FontAwesomeIconConstants.PLUS)
         SIGN = ("Sign bundle", FontAwesomeIconConstants.PEN)
-        button_data = [CREATE, SIGN]
+        REKEY = ("Rekey", FontAwesomeIconConstants.KEY)
+        button_data = [SCAN,CREATE, SIGN, REKEY]
         screen = ButtonListScreen(
             title="Tools",
             is_button_text_centered=False,
@@ -28,23 +25,29 @@ class ToolsMenuView(View):
 
         if selected_menu_num == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
+        
+        elif button_data[selected_menu_num] == SCAN:
+            return Destination(ScanView)
 
         elif button_data[selected_menu_num] == CREATE:
-            return Destination(ToolsCreateKeyView)
+            return Destination(CreateKeyEntryView, view_args=dict(total_keys=1))
 
         elif button_data[selected_menu_num] == SIGN:
             return Destination(BundleMenuView)
 
+        elif button_data[selected_menu_num] == REKEY:
+            return Destination(ToolsCreateReKeyView)
+
 """****************************************************************************
     Create Key Views
 ****************************************************************************"""
-class ToolsCreateKeyView(View):
+class ToolsCreateReKeyView(View):
     def run(self):
-        ONE = "Generate 1 Key"
+        ONE = "Generate a new Key"
         
         button_data = [ONE]
         selected_menu_num = ButtonListScreen(
-            title="Keys to Generate",
+            title="Keys for Rekey",
             is_bottom_list=True,
             is_button_text_centered=True,
             button_data=button_data,
@@ -54,36 +57,6 @@ class ToolsCreateKeyView(View):
             return Destination(BackStackView)
 
         elif button_data[selected_menu_num] == ONE:
-            return Destination(ToolsCreateKeyEntryView, view_args=dict(total_keys=1))
+            return Destination(CreateKeyEntryView, view_args=dict(total_keys=1))
 
-class ToolsCreateKeyEntryView(View):
-    def __init__(self, total_keys: int):
-        super().__init__()
-        self.total_keys = total_keys
-        self.loading_screen = None
-
-
-    def run(self):
-        ret = WarningScreen(
-            title="Caution",
-            status_headline="You will create a new Key Pair!",
-            text="Be at a save place!",
-            button_data=["I Understand"],
-        ).display()
-
-        if ret == RET_CODE__BACK_BUTTON:
-            return Destination(BackStackView)
-        self.loading_screen = LoadingScreenThread(text="Creating Key Pair...")
-        self.loading_screen.start()
-
-        try:
-            key = Key()
-            self.controller.inMemoryStore.set_pending_key(key)
-            self.loading_screen.stop()
-        except Exception as e:
-            self.loading_screen.stop()
-            raise e
-
-        # Cannot return BACK to this View
-        return Destination(KeyWarningView, view_args=dict(key_num= None, passphrase=""), clear_history=True)
 

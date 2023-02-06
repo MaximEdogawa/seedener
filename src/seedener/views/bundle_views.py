@@ -1,13 +1,8 @@
 from .view import View, Destination, BackStackView, MainMenuView
 from seedener.gui.components import FontAwesomeIconConstants
-from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen,)
-from seedener.views.scan_views import ScanView
-from seedener.views.key_views import LoadKeyView
 from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, bundle_screens, WarningScreen)
 from seedener.models.settings import SettingsConstants
 from seedener.models.qr_type import QRType 
-from seedener.models.encode_qr import EncodeQR 
-from seedener.gui.screens.screen import QRDisplayScreen 
 from seedener.gui.components import FontAwesomeIconConstants, SeedenerCustomIconConstants
 from seedener.gui.screens.screen import LoadingScreenThread, WarningScreen
 from seedener.gui.screens.bundle_screens import BundleExportQrDisplayLoopScreen
@@ -17,8 +12,9 @@ class BundleMenuView(View):
             super().__init__()
             self.bundles = []
             for bundle in self.controller.bundleStore.bundles:
-                if(bundle.isFinilized):
+                if bundle.isFinilized():
                     fingerprint= bundle.get_finilized_signed_bundle()
+                else:
                     fingerprint= bundle.get_unsigned_bundle()
 
                 self.bundles.append({
@@ -30,15 +26,15 @@ class BundleMenuView(View):
             button_data = []
             if self.bundles: 
                 for bundle in self.bundles:
-                    if(bundle["signed"]):
+                    if bundle["signed"]:
                         button_data.append((bundle["fingerprint"][:15] + "...", FontAwesomeIconConstants.PEN, "blue"))
                     else:
                         button_data.append((bundle["fingerprint"][:15] + "...", FontAwesomeIconConstants.PEN, "gray"))
 
-            button_data.append(" Scan a Spend Bundle")
+            button_data.append(("Scan Spend Bundle",FontAwesomeIconConstants.QRCODE))
 
             selected_menu_num = ButtonListScreen(
-                title="Unsigned Spend Bundle",
+                title="Spend Bundles",
                 is_button_text_centered=False,
                 button_data=button_data
             ).display()
@@ -47,10 +43,11 @@ class BundleMenuView(View):
                 return Destination(BundleOptionsView, view_args=dict(bundle_num = selected_menu_num))
 
             elif selected_menu_num == len(self.bundles):
+                from seedener.views.scan_views import ScanView
                 return Destination(ScanView)
 
             elif selected_menu_num == RET_CODE__BACK_BUTTON:
-                return Destination(BackStackView)
+                return Destination(MainMenuView)
 
 class BundleOptionsView(View):
         def __init__(self, bundle_num: int):
@@ -63,19 +60,20 @@ class BundleOptionsView(View):
             SIGN_BUNDLE = ("Sign Spend Bundle", None, None, None, FontAwesomeIconConstants.PEN)
             
             button_data = []
-            button_data.append(EXPORT_BUNDLE)
 
             if self.bundle.isFinilized():
-                selected_menu_num = bundle_screens.BundleOptionsScreen(
-                    button_data=button_data, 
-                    fingerprint=self.bundle.get_finilized_signed_bundle()[:15] + "...",
-                ).display() 
+                fingerprint=self.bundle.get_finilized_signed_bundle()[:15] + "..."
             else:
+                fingerprint=self.bundle.get_unsigned_bundle()[:15] + "..."
                 button_data.append(SIGN_BUNDLE)
-                selected_menu_num = bundle_screens.BundleOptionsScreen(
+
+            button_data.append(EXPORT_BUNDLE)
+
+            selected_menu_num = bundle_screens.BundleOptionsScreen(
                     button_data=button_data, 
-                    fingerprint=self.bundle.get_unsigned_bundle()[:15] + "...",
-                ).display()
+                    fingerprint=fingerprint,
+            ).display() 
+           
     
             if selected_menu_num == RET_CODE__BACK_BUTTON:
             # Force BACK to always return to the Main Menu
@@ -133,7 +131,7 @@ class BundleExportQRDisplayView(View):
             qr_type=self.qr_type
         )
 
-        return Destination(BundleOptionsView, view_args=dict(bundle_num = self.bundle_num))
+        return Destination(BundleMenuView)
 
 
     
@@ -147,22 +145,30 @@ class BundleSignSelectKeysView(View):
             self.keys.append({
                 "fingerprint": key.get_fingerprint(),
                 "has_passphrase": key.getPasswordProtect(),
-                "isSelected": key.getSelected()
+                "isSelected": key.getSelected(),
+                "new": key.get_is_new(),
             })
     
     def run(self):
         if not self.keys:
             # Nothing to do here unless we have a key loaded
-            return Destination(LoadKeyView, clear_history=True)
+            return Destination(ScanKeyView, clear_history=True)
 
         button_data = []
         SIGN_BUNDLE = ("Sign Spend Bundle", None, None, None, FontAwesomeIconConstants.PEN)
 
         for key in self.keys:
-            if(key["isSelected"]):
-                button_data.append((key["fingerprint"][:15] + "...", SeedenerCustomIconConstants.CIRCLE_CHECK, "blue"))
+            if key["new"]:
+                if key["isSelected"]:
+                    button_data.append(("NEW - "+key["fingerprint"][:10] + "...", FontAwesomeIconConstants.SOLID_CIRCLE_CHECK, "yellow"))
+                else:
+                    button_data.append(("NEW - "+key["fingerprint"][:10] + "...", SeedenerCustomIconConstants.CIRCLE_CHECK, "gray"))
             else:
-                button_data.append((key["fingerprint"][:15] + "...", SeedenerCustomIconConstants.CIRCLE_CHECK, "gray"))
+                if key["isSelected"] :
+                    button_data.append((key["fingerprint"][:15] + "...", FontAwesomeIconConstants.SOLID_CIRCLE_CHECK, "blue"))
+                else:
+                    button_data.append((key["fingerprint"][:15] + "...", SeedenerCustomIconConstants.CIRCLE_CHECK, "gray"))
+
 
         button_data.append(SIGN_BUNDLE)
 
@@ -187,6 +193,25 @@ class BundleSignSelectKeysView(View):
 
         elif selected_menu_num == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView) 
+
+class ScanKeyView(View):
+    def run(self):
+        SCAN = (" Scan a key", FontAwesomeIconConstants.PLUS)
+        button_data=[
+            SCAN,
+        ]
+
+        selected_menu_num = ButtonListScreen(
+            title="Load A Key",
+            is_button_text_centered=False,
+            button_data=button_data
+        ).display()
+
+        if selected_menu_num == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+
+        elif button_data[selected_menu_num] == SCAN:
+            return Destination(ScanView)
 
 class SigneBundleView (View):
     def __init__(self, bundle_num: int):
@@ -223,7 +248,7 @@ class SigneBundleView (View):
             key_num+=1
 
         if self.bundle.get_is_signed_bundle():
-            self.loading_screen = LoadingScreenThread(text="Merging vBundle Parts:")
+            self.loading_screen = LoadingScreenThread(text="Merging Bundle Parts:")
             self.loading_screen.start()
             self.bundle._mergeSignedBundles()
             self.loading_screen.stop()

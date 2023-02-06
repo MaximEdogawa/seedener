@@ -25,7 +25,6 @@ class ScanView(View):
                     raise Exception("Key is not valid!")
                 else:
                     # Found a valid Secret Component! All new keys should be considered
-                    from .key_views import KeyFinalizeView
                     self.controller.inMemoryStore.set_pending_key(
                         Key(priv_key=key_phrase)
                     )
@@ -33,6 +32,7 @@ class ScanView(View):
                         from seedener.views.key_views import KeyWarningView
                         return Destination(KeyWarningView)
                     else:
+                        from seedener.views.key_views import  KeyFinalizeView
                         return Destination(KeyFinalizeView)
 
             elif self.decoder.is_spendBundle:

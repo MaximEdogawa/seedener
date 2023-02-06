@@ -20,6 +20,7 @@ class Key:
         self.priv_key: str = priv_key
         self.pub_key: str = ""
         self.selected: bool = False
+        self.is_new:bool=False
         if(self.priv_key==""):
             self._generate_key(passphrase)
 
@@ -28,8 +29,8 @@ class Key:
         
     def _generate_key(self, passphrase: str = ""):
         try:
-            self.priv_key = subprocess.Popen(HSMGEN, shell = True, stdout=subprocess.PIPE).stdout.read().decode()   
-     
+            self.priv_key = subprocess.Popen(HSMGEN, shell = True, stdout=subprocess.PIPE).stdout.read().decode()
+            self.is_new=True
         except Exception as e:
             print(repr(e))
             raise InvalidKeyException(repr(e))
@@ -109,3 +110,6 @@ class Key:
     
     def setSelected(self, selected: bool = False):
         self.selected= selected
+    
+    def get_is_new(self):
+        return self.is_new

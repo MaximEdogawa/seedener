@@ -13,20 +13,22 @@ from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, setti
 from seedener.models.settings import SettingsConstants, SettingsDefinition
 from seedener.gui.screens.screen import LargeIconStatusScreen, QRDisplayScreen 
 from seedener.models.key import InvalidKeyException, Key
-from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen,
-    WarningScreen, DireWarningScreen, key_screens)
+from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, WarningScreen, DireWarningScreen, key_screens)
 from seedener.models.qr_type import QRType 
 from seedener.models.encode_qr import EncodeQR 
+from seedener.gui.screens.screen import LoadingScreenThread
+from seedener.models.key import Key
 
 SUBSTRING_LENGTH = 7
 class KeysMenuView(View):
-    def __init__(self):
+    def __init__(self, isRekey: bool=False):
         super().__init__()
         self.keys = []
         for key in self.controller.inMemoryStore.keys:
             self.keys.append({
                 "fingerprint": key.get_fingerprint(),
-                "has_passphrase": key.getPasswordProtect()
+                "has_passphrase": key.getPasswordProtect(),
+                "new": key.get_is_new(),
             })
 
     def run(self):
@@ -36,12 +38,20 @@ class KeysMenuView(View):
 
         button_data = []
         for key in self.keys:
-            if(key["has_passphrase"]):
-                button_data.append((key["fingerprint"][:15] + "...", SeedenerCustomIconConstants.FINGERPRINT, "blue"))
+            
+            if key["new"]:
+                if(key["has_passphrase"]):
+                    button_data.append(("NEW - "+key["fingerprint"][:10] + "...", FontAwesomeIconConstants.LOCK, "yellow"))
+                else:
+                    button_data.append(("NEW - "+key["fingerprint"][:10] + "...", SeedenerCustomIconConstants.CIRCLE_EXCLAMATION, "yellow"))
             else:
-                button_data.append((key["fingerprint"][:15] + "...", SeedenerCustomIconConstants.FINGERPRINT, "gray"))
+                if(key["has_passphrase"]):
+                    button_data.append((key["fingerprint"][:15] + "...", FontAwesomeIconConstants.LOCK, "blue"))
+                else:
+                    button_data.append((key["fingerprint"][:15] + "...", SeedenerCustomIconConstants.FINGERPRINT, "blue"))
+                
 
-        button_data.append("Load a key")
+        button_data.append(" Create a key")
 
         selected_menu_num = ButtonListScreen(
             title="In-Memory Keys",
@@ -53,7 +63,7 @@ class KeysMenuView(View):
             return Destination(KeyOptionsView, view_args=dict(key_num = selected_menu_num))
 
         elif selected_menu_num == len(self.keys):
-            return Destination(LoadKeyView)
+            return Destination(CreateKeyEntryView, view_args=dict(total_keys=1))
 
         elif selected_menu_num == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
@@ -63,10 +73,8 @@ class KeysMenuView(View):
 ****************************************************************************"""
 class LoadKeyView(View):
     def run(self):
-        KEY_QR = (" Scan a KeyQR", FontAwesomeIconConstants.QRCODE)
         CREATE = (" Create a key", FontAwesomeIconConstants.PLUS)
         button_data=[
-            KEY_QR,
             CREATE,
         ]
 
@@ -78,14 +86,42 @@ class LoadKeyView(View):
 
         if selected_menu_num == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
-        
-        if button_data[selected_menu_num] == KEY_QR:
-            from .scan_views import ScanView
-            return Destination(ScanView)
 
         elif button_data[selected_menu_num] == CREATE:
-            from .tools_views import ToolsCreateKeyView
-            return Destination(ToolsCreateKeyView)
+            return Destination(CreateKeyEntryView, view_args=dict(total_keys=1))
+
+"""****************************************************************************
+    Create Key Views
+****************************************************************************"""
+class CreateKeyEntryView(View):
+    def __init__(self, total_keys: int=1):
+        super().__init__()
+        self.total_keys = total_keys
+        self.loading_screen = None
+
+    def run(self):
+        ret = WarningScreen(
+            title="Caution",
+            status_headline="You will create a new Key Pair!",
+            text="Be at a save place!",
+            button_data=["I Understand"],
+        ).display()
+
+        if ret == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+        self.loading_screen = LoadingScreenThread(text="Creating Key Pair...")
+        self.loading_screen.start()
+
+        try:
+            key = Key()
+            self.controller.inMemoryStore.set_pending_key(key)
+            self.loading_screen.stop()
+        except Exception as e:
+            self.loading_screen.stop()
+            raise e
+
+        # Cannot return BACK to this View
+        return Destination(KeyWarningView, view_args=dict(key_num= None, passphrase=""), clear_history=True)
 
 """****************************************************************************
     View Key Substring flow
@@ -427,8 +463,50 @@ class KeyTranscribeKeyQRConfirmScanView(View):
         self.key = self.controller.get_key(key_num)
 
     def run(self):
-        #TODO: Implement Scan View first
-        return Destination(BackStackView, skip_current_view=True)
+        from seedener.gui.screens.scan_screen import ScanScreen
+        from seedener.models import DecodeQR
+        self.decoder = DecodeQR()
+        ScanScreen(decoder=self.decoder, instructions_text="Scan your KeyQR").display()
+
+        if self.decoder.is_complete:
+            if self.decoder.is_key:
+                key_phrase = self.decoder.get_key_phrase()
+                if not key_phrase:
+                    # key is not valid, Exit if not valid with message
+                    raise Exception("Key is not valid!")
+                else:
+                    if key_phrase != self.key.get_privateKey_forSigning():
+                        DireWarningScreen(
+                            title="Confirm KeyQR",
+                            status_headline="Error!",
+                            text="Your transcribed KeyQR does not match your original key!",
+                            show_back_button=False,
+                            button_data=["Review KeyQR"],
+                        ).display()
+
+                        return Destination(BackStackView, skip_current_view=True)
+
+                    else:
+                        LargeIconStatusScreen(
+                            title="Confirm KeyQR",
+                            status_headline="Success!",
+                            text="Your transcribed KeyQR successfully scanned and yielded the same key.",
+                            show_back_button=False,
+                            button_data=["OK"],
+                        ).display() 
+
+                        return Destination(KeyOptionsView, view_args={"key_num": self.key_num})
+            else:
+                # Will this case ever happen? Will trigger if a different kind of QR code is scanned
+                DireWarningScreen(
+                    title="Confirm KeyQR",
+                    status_headline="Error!",
+                    text="Your transcribed KeyQR could not be read!",
+                    show_back_button=False,
+                    button_data=["Review KeyQR"],
+                ).display()
+
+                return Destination(BackStackView, skip_current_view=True)
 
 """****************************************************************************
     Export Public Key flow
@@ -483,6 +561,7 @@ class KeyExportPubQRDisplayView(View):
     def __init__(self, key_num: int):
         super().__init__()
         self.key = self.controller.get_key(key_num)
+        self.key_num = key_num
 
         qr_density = self.settings.get_value(SettingsConstants.SETTING__QR_DENSITY)
         qr_type = QRType.KEY__KEYQR
@@ -494,8 +573,11 @@ class KeyExportPubQRDisplayView(View):
         )
 
     def run(self):
-        QRDisplayScreen(qr_encoder=self.qr_encoder).display()  
-        return Destination(MainMenuView)
+        ret = QRDisplayScreen(qr_encoder=self.qr_encoder).display()  
+        if ret == RET_CODE__BACK_BUTTON:
+            return Destination(KeyExportPubTypeView, view_args=dict(key_num=self.key_num))
+        else:
+            return Destination(MainMenuView)
 
 """****************************************************************************
     Key Backup View
@@ -741,7 +823,7 @@ class KeyFinalizeView(View):
 
         if button_data[selected_menu_num] == FINALIZE:
             self.controller.inMemoryStore.finalize_pending_key()
-            return Destination(MainMenuView, clear_history=True)
+            return Destination(KeysMenuView, clear_history=True)
 
         elif button_data[selected_menu_num] == PASSPHRASE:
             return Destination(KeyAddPassphraseView)
