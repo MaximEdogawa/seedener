@@ -8,7 +8,6 @@ from .view import View, Destination, BackStackView, MainMenuView, NotYetImplemen
 from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, settings_screens)
 from seedener.models.settings import SettingsConstants, SettingsDefinition
 from seedener.models import DecodeQR, Key, Bundle
-from .key_views import KeyWarningView, KeyFinalizeView
 
 class ScanView(View):
     def run(self):
@@ -30,8 +29,10 @@ class ScanView(View):
                         Key(priv_key=key_phrase)
                     )
                     if self.settings.get_value(SettingsConstants. SETTING__PRIVACY_WARNINGS) == SettingsConstants.OPTION__REQUIRED:
+                        from seedener.views.key_views import KeyWarningView
                         return Destination(KeyWarningView)
                     else:
+                        from seedener.views.key_views import  KeyFinalizeView
                         return Destination(KeyFinalizeView)
 
             elif self.decoder.is_spendBundle:

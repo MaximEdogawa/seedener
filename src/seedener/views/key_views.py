@@ -463,8 +463,50 @@ class KeyTranscribeKeyQRConfirmScanView(View):
         self.key = self.controller.get_key(key_num)
 
     def run(self):
-        #TODO: Implement Scan View first
-        return Destination(BackStackView, skip_current_view=True)
+        from seedener.gui.screens.scan_screen import ScanScreen
+        from seedener.models import DecodeQR
+        self.decoder = DecodeQR()
+        ScanScreen(decoder=self.decoder, instructions_text="Scan your KeyQR").display()
+
+        if self.decoder.is_complete:
+            if self.decoder.is_key:
+                key_phrase = self.decoder.get_key_phrase()
+                if not key_phrase:
+                    # key is not valid, Exit if not valid with message
+                    raise Exception("Key is not valid!")
+                else:
+                    if key_phrase != self.key.get_privateKey_forSigning():
+                        DireWarningScreen(
+                            title="Confirm KeyQR",
+                            status_headline="Error!",
+                            text="Your transcribed KeyQR does not match your original key!",
+                            show_back_button=False,
+                            button_data=["Review KeyQR"],
+                        ).display()
+
+                        return Destination(BackStackView, skip_current_view=True)
+
+                    else:
+                        LargeIconStatusScreen(
+                            title="Confirm KeyQR",
+                            status_headline="Success!",
+                            text="Your transcribed KeyQR successfully scanned and yielded the same key.",
+                            show_back_button=False,
+                            button_data=["OK"],
+                        ).display() 
+
+                        return Destination(KeyOptionsView, view_args={"key_num": self.key_num})
+            else:
+                # Will this case ever happen? Will trigger if a different kind of QR code is scanned
+                DireWarningScreen(
+                    title="Confirm KeyQR",
+                    status_headline="Error!",
+                    text="Your transcribed KeyQR could not be read!",
+                    show_back_button=False,
+                    button_data=["Review KeyQR"],
+                ).display()
+
+                return Destination(BackStackView, skip_current_view=True)
 
 """****************************************************************************
     Export Public Key flow
