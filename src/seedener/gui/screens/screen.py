@@ -1109,6 +1109,7 @@ class QRDisplayScreen(BaseScreen):
 
     def _run(self):
         from seedener.models.settings import Settings
+        Settings.get_instance().set_value(SettingsConstants.SETTING__QR_BRIGHTNESS, self.qr_brightness.cur_count)
 
         while True:
             user_input = self.hw_inputs.wait_for(
@@ -1137,4 +1138,3 @@ class QRDisplayScreen(BaseScreen):
                     break
                 return RET_CODE__BACK_BUTTON
 
-        Settings.get_instance().set_value(SettingsConstants.SETTING__QR_BRIGHTNESS, self.qr_brightness.cur_count)

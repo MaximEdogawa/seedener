@@ -5,9 +5,9 @@ from seedener.gui.components import FontAwesomeIconConstants, SeedenerCustomIcon
 
 from .view import View, Destination, BackStackView, MainMenuView, NotYetImplementedView
 
-from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, settings_screens)
+from seedener.gui.screens import (RET_CODE__BACK_BUTTON, DireWarningScreen, key_screens)
 from seedener.models.settings import SettingsConstants, SettingsDefinition
-from seedener.models import DecodeQR, Key, Bundle
+from seedener.models import DecodeQR, Key, Bundle, Encrypt
 
 class ScanView(View):
     def run(self):
@@ -50,7 +50,41 @@ class ScanView(View):
                         from seedener.views.bundle_views import BundleMenuView
                         return Destination(BundleMenuView)
                     else:
-                        return Destination(NotYetImplementedView)                        
+                        return Destination(NotYetImplementedView) 
+            elif self.decoder.is_encrypted_key:
+                encrypted_key = self.decoder.get_encrypted_key_phrase()
+                if not encrypted_key:
+                    # key is not valid, Exit if not valid with message
+                    raise Exception("Encrypted Key is not valid!")
+                else:  
+                    decoded=""
+                    QUIT = "Quit to Menu"
+                    RETRY = "Try Again"
+                    button_data = [RETRY, QUIT]
+                    while decoded == "":
+                        ret = key_screens.KeyPassphraseScreen(title="Input Passphrase").display() 
+                        decoded_key_phrase=Encrypt.decrypt_string(encrypted_key,ret)
+                        if not decoded_key_phrase:
+                            selected_menu_num = DireWarningScreen(
+                                title="Confirm Passphrase",
+                                status_headline="Error!",
+                                text="Your Passphrase is not correct!",
+                                show_back_button=False,
+                                button_data=button_data,
+                            ).display() 
+                            if button_data[selected_menu_num] == QUIT:
+                                return Destination(MainMenuView)
+                        else:
+                            # Found a valid Secret Component! All new keys should be considered
+                            self.controller.inMemoryStore.set_pending_key(
+                                Key(priv_key=decoded_key_phrase)
+                            )
+                            if self.settings.get_value(SettingsConstants. SETTING__PRIVACY_WARNINGS) == SettingsConstants.OPTION__REQUIRED:
+                                from seedener.views.key_views import KeyWarningView
+                                return Destination(KeyWarningView)
+                            else:
+                                from seedener.views.key_views import  KeyFinalizeView
+                                return Destination(KeyFinalizeView)
             else:
                 return Destination(NotYetImplementedView)
 

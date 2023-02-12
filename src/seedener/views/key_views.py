@@ -13,7 +13,7 @@ from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, setti
 from seedener.models.settings import SettingsConstants, SettingsDefinition
 from seedener.gui.screens.screen import LargeIconStatusScreen, QRDisplayScreen 
 from seedener.models.key import InvalidKeyException, Key
-from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, WarningScreen, DireWarningScreen, key_screens)
+from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, WarningScreen, DireWarningScreen ,key_screens)
 from seedener.models.qr_type import QRType 
 from seedener.models.encode_qr import EncodeQR 
 from seedener.gui.screens.screen import LoadingScreenThread
@@ -574,10 +574,7 @@ class KeyExportPubQRDisplayView(View):
 
     def run(self):
         ret = QRDisplayScreen(qr_encoder=self.qr_encoder).display()  
-        if ret == RET_CODE__BACK_BUTTON:
-            return Destination(KeyExportPubTypeView, view_args=dict(key_num=self.key_num))
-        else:
-            return Destination(MainMenuView)
+        return Destination(KeyOptionsView, view_args=dict(key_num=self.key_num))
 
 """****************************************************************************
     Key Backup View
@@ -586,13 +583,17 @@ class KeyBackupView(View):
     def __init__(self, key_num, passphrase: str = ""):
         super().__init__()
         self.key_num = key_num
-        self.key = self.controller.get_key(self.key_num)
         self.passphrase = passphrase
 
     def run(self):
-        VIEW_SUBSTRINGS = "View Key"    
-        EXPORT_KEYQR = "Export as KeyQR"
+        VIEW_SUBSTRINGS = "View Key"
+        EXPORT_KEYQR = "Export KeyQR"
+        EXPORT_ENCRYPT_KEYQR = "Export Encrypted KeyQR"
+
         button_data = [VIEW_SUBSTRINGS, EXPORT_KEYQR]
+
+        if self.passphrase != "":
+            button_data.append(EXPORT_ENCRYPT_KEYQR)
 
         selected_menu_num = ButtonListScreen(
             title="Backup Key",
@@ -601,13 +602,63 @@ class KeyBackupView(View):
         ).display()
 
         if selected_menu_num == RET_CODE__BACK_BUTTON:
-            return Destination(BackStackView)
+            return Destination(KeysMenuView,view_args=dict(key_num=self.key_num))
 
         elif button_data[selected_menu_num] == VIEW_SUBSTRINGS:
             return Destination(KeyWarningView, view_args=dict(key_num=self.key_num, passphrase=self.passphrase), clear_history=True)
 
         elif button_data[selected_menu_num] == EXPORT_KEYQR:
             return Destination(KeyTranscribeKeyQRFormatView, view_args=dict(key_num=self.key_num, passphrase=self.passphrase), clear_history=True)
+
+        elif button_data[selected_menu_num] == EXPORT_ENCRYPT_KEYQR:
+            return Destination(EncryptKeyQRFormatView, view_args=dict(key_num=self.key_num, passphrase=self.passphrase), clear_history=True)
+
+"""****************************************************************************
+    Export Encrypted Key as QR
+****************************************************************************"""
+class EncryptKeyQRFormatView(View):
+    def __init__(self, key_num: int, passphrase: str = ""):
+        super().__init__()
+        self.key_num = key_num
+        self.passphrase = passphrase
+            
+    def run(self):
+        ret = WarningScreen(
+                title="Caution",
+                status_headline="You will display your encrypted KeyQR.",
+                text= "This KeyQR will be encrypted with your Passphrase!",
+                button_data=["I Understand"],
+        ).display()
+
+        if ret == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+        else:
+            return Destination(KeyExportEncryptQRDisplayView, view_args=dict(key_num=self.key_num, passphrase=self.passphrase))
+
+class KeyExportEncryptQRDisplayView(View):
+    def __init__(self, key_num: int, passphrase: str = ""):
+        super().__init__()
+        self.key = self.controller.get_key(key_num)
+        self.key_num = key_num
+        self.passphrase= passphrase
+
+        qr_density = self.settings.get_value(SettingsConstants.SETTING__QR_DENSITY)
+        qr_type = QRType.KEY__KEYQR
+        self.key.set_encrypted_priv_key(self.passphrase)
+        encrypted_key = self.key.get_encrypted_priv_key()
+        if type(encrypted_key)==bytes:
+            encrypted_key = encrypted_key.decode('utf-8')
+
+        self.qr_encoder = EncodeQR(
+            key_phrase=encrypted_key, 
+            qr_type=qr_type,
+            qr_density=qr_density,
+        )
+
+    def run(self):
+        ret = QRDisplayScreen(qr_encoder=self.qr_encoder).display()  
+        return Destination(KeyOptionsView, view_args=dict(key_num=self.key_num))
+
 
 """****************************************************************************
     Key Discard View

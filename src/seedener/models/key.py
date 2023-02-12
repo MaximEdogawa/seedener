@@ -2,7 +2,7 @@ import unicodedata
 import subprocess
 import hashlib
 from binascii import hexlify
-
+from seedener.helpers.encrypt import Encrypt
 # Hsms Command-line Commands:
 HSMGEN = "hsmgen" #Keys generate
 HSMPK = "hsmpk" #Derive public key
@@ -21,6 +21,7 @@ class Key:
         self.pub_key: str = ""
         self.selected: bool = False
         self.is_new:bool=False
+        self.encrypted_priv_key = ""
         if(self.priv_key==""):
             self._generate_key(passphrase)
 
@@ -113,3 +114,10 @@ class Key:
     
     def get_is_new(self):
         return self.is_new
+    
+    def set_encrypted_priv_key(self, passphrase):
+        self.encrypted_priv_key = Encrypt.encrypt_string(self.get_private(passphrase), passphrase)
+
+    def get_encrypted_priv_key(self):
+        return self.encrypted_priv_key
+

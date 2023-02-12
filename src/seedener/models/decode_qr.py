@@ -15,6 +15,8 @@ from typing import List
 import subprocess
 import hashlib
 from binascii import hexlify
+from seedener.helpers.encrypt import Encrypt
+
 
 PBKDF2_ROUNDS = 2048
 
@@ -54,17 +56,14 @@ class DecodeQR:
         if data == None:
             return DecodeQRStatus.FALSE
 
-        if type(data) == str:
-            # Should always be bytes, but the test suite has some manual datasets that
-            # TODO: Convert the test suite rather than handle here?
-            data=data.decode('utf-8')
-
         qr_type = DecodeQR.detect_segment_type(data)
 
         if self.qr_type == None:
             self.qr_type = qr_type
             if self.qr_type in [QRType.SECRECT_COMPONENT]:
                 self.decoder = KeyQrDecoder()
+            elif self.qr_type in [QRType.ENCRYPTED_KEY]:
+                self.decoder = EncryptedKeyQrDecoder()
             elif self.qr_type in [QRType.QR_SEQUENCE_MODE]:
                 self.decoder = BundleQrDecoder()        
             
@@ -85,8 +84,9 @@ class DecodeQR:
         if self.qr_type in [QRType.QR_SEQUENCE_MODE]:
             header, payload = DecodeQR.decode_data(data)
             rt = self.decoder.add(header, payload, self.qr_type)
-        else:
-            # All other formats use the same method signature
+        elif self.qr_type in [QRType.ENCRYPTED_KEY]:
+            rt = self.decoder.add(qr_str, self.qr_type)
+        elif self.qr_type in [QRType.SECRECT_COMPONENT]:
             rt = self.decoder.add(qr_str, self.qr_type)
         
         if rt == DecodeQRStatus.COMPLETE:
@@ -98,16 +98,20 @@ class DecodeQR:
         #print("-------------- DecodeQR.detect_segment_type --------------")
         #print(type(data))
         #print(len(data))
+        #TODO: rewrite recognition of qrtype
         if type(data)==bytes:
             qr_str = data.decode('utf-8')
+        else:
+            qr_str = data
             
         try:
             if qr_str[:3]==QRType.SECRECT_COMPONENT:
                 return QRType.SECRECT_COMPONENT
+            elif qr_str[:8]==QRType.ENCRYPTED_KEY:
+                return QRType.ENCRYPTED_KEY
             else:
                 return QRType.QR_SEQUENCE_MODE
                  
-        
             # config data
             #if "type=settings" in s:
             #    return QRType.SETTINGS
@@ -134,6 +138,10 @@ class DecodeQR:
     def get_key_phrase(self):
         if self.is_key:
             return self.decoder.get_key_phrase()
+    
+    def get_encrypted_key_phrase(self):
+        if self.is_encrypted_key:
+            return self.decoder.get_encrypted_key_phrase()
 
     def get_spend_bundle(self):
         return self.decoder.get_spend_bundle()
@@ -181,12 +189,18 @@ class DecodeQR:
     def is_key(self):
         return self.qr_type in [
             QRType.SECRECT_COMPONENT,
-        ]    
+        ]   
 
     @property
     def is_spendBundle(self):
         return self.qr_type in [
             QRType.QR_SEQUENCE_MODE,
+        ] 
+    
+    @property
+    def is_encrypted_key(self):
+        return self.qr_type in [
+            QRType.ENCRYPTED_KEY
         ] 
 
     @property
@@ -227,9 +241,7 @@ class KeyQrDecoder(BaseSingleFrameQrDecoder):
         super().__init__()
         self.key_phrase = []
 
-    def add(self, key_phrase, qr_type=QRType.KEY__KEYQR):
-        # `key_phrase` data will either be bytes or str, depending on the qr_typ
-
+    def add(self, key_phrase, qr_type=QRType.SECRECT_COMPONENT):
         if qr_type == QRType.SECRECT_COMPONENT:
             try:
                 self.key_phrase = key_phrase
@@ -243,8 +255,6 @@ class KeyQrDecoder(BaseSingleFrameQrDecoder):
                     return DecodeQRStatus.INVALID
             except Exception as e:
                 return DecodeQRStatus.INVALID
-        else:
-            return DecodeQRStatus.INVALID  
 
     def get_key_phrase(self):
         if self.complete:
@@ -256,6 +266,31 @@ class KeyQrDecoder(BaseSingleFrameQrDecoder):
         if len(self.key_phrase) <= SECRET_COMPONENT_MAX_SIZE:
             return True
         return False
+class EncryptedKeyQrDecoder(BaseSingleFrameQrDecoder):
+    def __init__(self):
+        super().__init__()
+        self.key_phrase = []
+    
+    def add(self, key_phrase, qr_type=QRType.ENCRYPTED_KEY):
+        if qr_type == QRType.ENCRYPTED_KEY:
+            try:
+                self.key_phrase = key_phrase
+                if len(self.key_phrase) > 0:
+                    self.collected_segments = 1
+                    self.complete = True
+                    return DecodeQRStatus.COMPLETE
+                else:
+                    return DecodeQRStatus.INVALID
+            except Exception as e:
+                return DecodeQRStatus.INVALID
+
+        else:
+            return DecodeQRStatus.INVALID  
+
+    def get_encrypted_key_phrase(self):
+        if self.complete:
+            return self.key_phrase[:]
+        return []
 
 class BundleQrDecoder(BaseQrDecoder):
     def __init__(self):
@@ -311,4 +346,5 @@ class BundleQrDecoder(BaseQrDecoder):
             return self.spend_bundle_hash 
         return
     
-    
+
+
