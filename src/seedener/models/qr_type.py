@@ -7,6 +7,7 @@ class QRType:
     KEY__COMPACTKEYQR = "key__compactkeyqr"
     KEY__UR2 = "key__ur2"
     SECRECT_COMPONENT = "se1"
+    ENCRYPTED_KEY="Salted__"
     QR_SEQUENCE_MODE = 'mode'
     MODE_HASH = 2
     MODE_CHUNK = 1

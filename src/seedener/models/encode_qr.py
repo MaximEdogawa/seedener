@@ -94,14 +94,19 @@ class KeyQrEncoder(BaseQrEncoder):
         # To Make sure string is unicode UTF8 encode and decode
         next_key_part: str=''
         length=len(self.key_phrase)
-        if length>=self.chunk_size:
-            next_key_part= self.key_phrase[:self.chunk_size]
-            self.key_phrase= self.key_phrase[self.chunk_size:]
-            self.is_complete=False
-        else:
+        if self.chunk_size==0:
             next_key_part=self.key_phrase
             self.key_phrase=self.saved_key_phrase
             self.is_complete=True
+        else:
+            if length >=self.chunk_size:
+                next_key_part= self.key_phrase[:self.chunk_size]
+                self.key_phrase= self.key_phrase[self.chunk_size:]
+                self.is_complete=False
+            else:
+                next_key_part=self.key_phrase
+                self.key_phrase=self.saved_key_phrase
+                self.is_complete=True
 
         return next_key_part.encode().decode('UTF-8')
 
