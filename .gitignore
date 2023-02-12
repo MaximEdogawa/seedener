@@ -6,6 +6,6 @@ src/seedener.egg-info/
 .idea
 *.mo
 venv
+deb_dist
+dist
 *.deb
-/deb_dist/
-/dist/
