@@ -7,5 +7,5 @@ src/seedener.egg-info/
 *.mo
 venv
 *.deb
-deb_dist
-dist
+deb_dist/
+dist/
