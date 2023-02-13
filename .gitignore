@@ -1,4 +1,6 @@
 .DS_Store
+deb_dist/
+dist/
 __pycache__/
 src/seedener.egg-info/
 .nova
@@ -6,3 +8,4 @@ src/seedener.egg-info/
 .idea
 *.mo
 venv
+*.deb
