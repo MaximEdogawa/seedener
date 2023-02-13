@@ -8,7 +8,7 @@ from binascii import a2b_base64, b2a_base64
 from enum import IntEnum
 from pyzbar import pyzbar
 from pyzbar.pyzbar import ZBarSymbol
-from . import QRType
+from . import QRType 
 from .settings import SettingsConstants
 
 from typing import List

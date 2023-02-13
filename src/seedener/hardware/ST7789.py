@@ -4,8 +4,6 @@ import time
 import numpy as np
 import spidev as SPI
 
-
-
 class ST7789(object):
     """class for ST7789  240*240 1.3inch OLED displays."""
 
@@ -15,22 +13,23 @@ class ST7789(object):
 
         
         #Initialize DC RST pin
-        if GPIO.RPI_INFO['P1_REVISION'] == 0: 
-            self._dc = 25
+        if GPIO.RPI_INFO['TYPE'] == 'Compute Module 4' or GPIO.RPI_INFO['P1_REVISION'] == 3: 
             self._rst = 27
+            self._dc = 25
             self._bl = 18
             GPIO.setmode(GPIO.BCM)
 
         elif GPIO.RPI_INFO['TYPE'] == "Zero":
-            self._dc = 22
             self._rst = 13
+            self._dc = 22
             self._bl = 18
             GPIO.setmode(GPIO.BOARD)
+        
         else:
-            self._dc = 25
-            self._rst = 27
+            self._rst = 13
+            self._dc = 22
             self._bl = 18
-            GPIO.setmode(GPIO.BCM)
+            GPIO.setmode(GPIO.BOARD)
 
         GPIO.setwarnings(False)
         GPIO.setup(self._dc,GPIO.OUT)

@@ -615,7 +615,6 @@ class ToastOverlay(BaseComponent):
         # Special case when screensaver is running
         if self.controller.screensaver._is_running:
             self.controller.buttons.override_ind = True
-
         self.image_draw.rounded_rectangle(
             ( GUIConstants.EDGE_PADDING + 2, self.canvas_height - 60, self.canvas_width - GUIConstants.EDGE_PADDING - 2, self.canvas_width - GUIConstants.EDGE_PADDING - 2),
             fill=GUIConstants.BACKGROUND_COLOR,

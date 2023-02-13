@@ -1,6 +1,6 @@
 import hashlib
 
-from ..models.key import Key
+from seedener.models.key import Key
 
 key = Key()
 print(key.get_pub())
