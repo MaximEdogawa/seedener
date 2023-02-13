@@ -6,7 +6,7 @@ sudo apt-get update && sudo apt-get install build-essential libcap-dev python3-p
 ### Setup a virtual environment
 ```
 python3 -m venv venv --system-site-packages
-source /vevn/bin/activate
+source /venv/bin/activate
 ```
 
 ### Install Python `pip` dependencies:
