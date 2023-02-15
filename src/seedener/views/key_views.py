@@ -658,7 +658,7 @@ class KeyDiscardView(View):
         DISCARD = ("Discard", None, None, "red")
         button_data = [KEEP, DISCARD]
 
-        fingerprint = self.key.get_fingerprint(self.settings.get_value(SettingsConstants.SETTING__NETWORK))
+        fingerprint = self.key.get_fingerprint()[:15] + "..."
         selected_menu_num = WarningScreen(
             title="Discard in Memory Key?!",
             status_headline=None,
