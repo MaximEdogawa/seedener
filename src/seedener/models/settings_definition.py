@@ -302,13 +302,13 @@ class SettingsDefinition:
     
 
         # Advanced options
-        SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
-                      attr_name=SettingsConstants.SETTING__NETWORK,
-                      display_name="Chia network",
-                      type=SettingsConstants.TYPE__SELECT_1,
-                      visibility=SettingsConstants.VISIBILITY__ADVANCED,
-                      selection_options=SettingsConstants.ALL_NETWORKS,
-                      default_value=SettingsConstants.MAINNET),
+        #SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
+        #              attr_name=SettingsConstants.SETTING__NETWORK,
+        #              display_name="Chia network",
+        #              type=SettingsConstants.TYPE__SELECT_1,
+        #              visibility=SettingsConstants.VISIBILITY__ADVANCED,
+        #              selection_options=SettingsConstants.ALL_NETWORKS,
+        #              default_value=SettingsConstants.MAINNET),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__QR_DENSITY,
@@ -319,38 +319,12 @@ class SettingsDefinition:
                       default_value=SettingsConstants.DENSITY__MEDIUM),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
-                      attr_name=SettingsConstants.SETTING__XPUB_EXPORT,
-                      display_name="Xpub export",
-                      visibility=SettingsConstants.VISIBILITY__ADVANCED,
-                      default_value=SettingsConstants.OPTION__ENABLED),
-
-        SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
-                      attr_name=SettingsConstants.SETTING__XPUB_DETAILS,
-                      display_name="Show xpub details",
-                      visibility=SettingsConstants.VISIBILITY__ADVANCED,
-                      default_value=SettingsConstants.OPTION__ENABLED),
-
-        SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
-                      attr_name=SettingsConstants.SETTING__PASSPHRASE,
-                      display_name="BIP-39 passphrase",
-                      type=SettingsConstants.TYPE__SELECT_1,
-                      visibility=SettingsConstants.VISIBILITY__ADVANCED,
-                      selection_options=SettingsConstants.OPTIONS__ENABLED_DISABLED_REQUIRED,
-                      default_value=SettingsConstants.OPTION__ENABLED),
-
-        SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__CAMERA_ROTATION,
                       display_name="Camera rotation",
                       type=SettingsConstants.TYPE__SELECT_1,
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       selection_options=SettingsConstants.ALL_CAMERA_ROTATIONS,
                       default_value=SettingsConstants.CAMERA_ROTATION__0),
-
-        SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
-                      attr_name=SettingsConstants.SETTING__COMPACT_KEYQR,
-                      display_name="CompactKeyQR",
-                      visibility=SettingsConstants.VISIBILITY__ADVANCED,
-                      default_value=SettingsConstants.OPTION__DISABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__PRIVACY_WARNINGS,

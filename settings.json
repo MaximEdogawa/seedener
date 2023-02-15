@@ -1,0 +1,11 @@
+{
+    "language": "en",
+    "persistent_settings": "E",
+    "network": "M",
+    "qr_density": "H",
+    "camera_rotation": 270,
+    "privacy_warnings": "E",
+    "dire_warnings": "E",
+    "partner_logos": "D",
+    "qr_background_color": 189
+}

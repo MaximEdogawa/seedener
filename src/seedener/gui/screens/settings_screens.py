@@ -284,7 +284,7 @@ class DonateScreen(BaseTopNavScreen):
         super().__post_init__()
 
         self.components.append(TextArea(
-            text="Seedener is 100% free & open source. \n\n Please send to this MaximEdogawa.xch or did:chia:1w0hjc9aja50f0895f8lj3pfvxdcp3ngl0e0yk64lz3yw34js5mvstx2cnk",
+            text="Seedener is 100% free & open source. \n\n Please donate to MaximEdogawa.xch",
             screen_y=self.top_nav.height + 3*GUIConstants.COMPONENT_PADDING,
         ))
 
