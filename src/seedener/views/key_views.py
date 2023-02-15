@@ -66,7 +66,7 @@ class KeysMenuView(View):
             return Destination(CreateKeyEntryView, view_args=dict(total_keys=1))
 
         elif selected_menu_num == RET_CODE__BACK_BUTTON:
-            return Destination(BackStackView)
+            return Destination(MainMenuView)
 
 """****************************************************************************
     Loading keys, passphrases, etc
@@ -287,25 +287,9 @@ class KeyTranscribeKeyQRFormatView(View):
 
     def run(self):
         STANDARD = "Standard: 29x29"
-        COMPACT = "Compact: 25x25"
         num_modules_standard = 29
-        num_modules_compact = 25
 
-        if self.settings.get_value(SettingsConstants.SETTING__COMPACT_KEYQR) != SettingsConstants.OPTION__ENABLED:
-            # Only configured for standard KeyQR
-            return Destination(
-                KeyTranscribeKeyQRWarningView,
-                view_args={
-                    "key_num": self.key_num,
-                    "keyqr_format": QRType.KEY__KEYQR,
-                    "num_modules": num_modules_standard,
-                    "passphrase": self.passphrase,
-
-                },
-                skip_current_view=True,
-            ) 
-
-        button_data = [STANDARD, COMPACT]
+        button_data = [STANDARD]
 
         selected_menu_num = key_screens.KeyTranscribeKeyQRFormatScreen( 
             title="KeyQR Format",
@@ -318,18 +302,18 @@ class KeyTranscribeKeyQRFormatView(View):
         if button_data[selected_menu_num] == STANDARD: 
             keyqr_format = QRType.KEY__KEYQR
             num_modules = num_modules_standard
-        else:
-            keyqr_format = QRType.KEY__COMPACTKEYQR 
-            num_modules = num_modules_compact
         
         return Destination(
-            KeyTranscribeKeyQRWarningView,
+                KeyTranscribeKeyQRWarningView,
                 view_args={
                     "key_num": self.key_num,
-                    "keyqr_format": keyqr_format,
-                    "num_modules": num_modules,
-                }
-            )
+                    "keyqr_format": QRType.KEY__KEYQR,
+                    "num_modules": num_modules_standard,
+                    "passphrase": self.passphrase,
+
+                },
+                skip_current_view=True,
+            ) 
 
 class KeyTranscribeKeyQRWarningView(View):
     def __init__(self, key_num: int, keyqr_format: str = QRType.KEY__KEYQR, num_modules: int = 29, passphrase: str = ""):
@@ -418,10 +402,7 @@ class KeyTranscribeKeyQRZoomedInView(View):
         )
 
         data = e.next_part()
-        if self.keyqr_format == QRType.KEY__COMPACTKEYQR:
-            num_modules = 21
-        else:
-            num_modules = 25
+        num_modules = 25
 
         key_screens.KeyTranscribeKeyQRZoomedInScreen( 
             qr_data=data,
@@ -529,7 +510,7 @@ class KeyExportPubTypeView(View):
         if ret == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
         else:
-            return Destination(KeyExportPubQRDisplayView, view_args=dict(key_num=self.key_num))
+            return Destination(KeyExportPubQRDisplayView, view_args=dict(key_num=self.key_num), clear_history=True)
 
 class KeyTranscribePubKeyQRWholeQRView(View):
     def __init__(self, key_num: int, keyqr_format: str, num_modules: int):
@@ -574,7 +555,7 @@ class KeyExportPubQRDisplayView(View):
 
     def run(self):
         ret = QRDisplayScreen(qr_encoder=self.qr_encoder).display()  
-        return Destination(KeyOptionsView, view_args=dict(key_num=self.key_num))
+        return Destination(KeysMenuView, clear_history=True)
 
 """****************************************************************************
     Key Backup View
@@ -602,7 +583,7 @@ class KeyBackupView(View):
         ).display()
 
         if selected_menu_num == RET_CODE__BACK_BUTTON:
-            return Destination(KeysMenuView,view_args=dict(key_num=self.key_num))
+            return Destination(KeysMenuView)
 
         elif button_data[selected_menu_num] == VIEW_SUBSTRINGS:
             return Destination(KeyWarningView, view_args=dict(key_num=self.key_num, passphrase=self.passphrase), clear_history=True)
@@ -677,7 +658,7 @@ class KeyDiscardView(View):
         DISCARD = ("Discard", None, None, "red")
         button_data = [KEEP, DISCARD]
 
-        fingerprint = self.key.get_fingerprint(self.settings.get_value(SettingsConstants.SETTING__NETWORK))
+        fingerprint = self.key.get_fingerprint()[:15] + "..."
         selected_menu_num = WarningScreen(
             title="Discard in Memory Key?!",
             status_headline=None,

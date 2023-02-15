@@ -2,10 +2,14 @@
     "language": "en",
     "persistent_settings": "E",
     "network": "M",
-    "qr_density": "H",
+    "qr_density": "M",
     "camera_rotation": 270,
     "privacy_warnings": "E",
     "dire_warnings": "E",
     "partner_logos": "D",
-    "qr_background_color": 189
+    "qr_background_color": 189,
+    "xpub_details": "E",
+    "xpub_export": "E",
+    "passphrase": "E",
+    "compact_keyqr": "E"
 }

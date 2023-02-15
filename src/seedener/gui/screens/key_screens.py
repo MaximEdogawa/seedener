@@ -833,10 +833,3 @@ class KeyTranscribeKeyQRFormatScreen(ButtonListScreen):
             screen_x=GUIConstants.EDGE_PADDING,
             screen_y=self.top_nav.height + GUIConstants.COMPONENT_PADDING,
         ))
-        self.components.append(IconTextLine(
-            label_text="Compact",
-            value_text="Raw entropy bits",
-            is_text_centered=False,
-            screen_x=GUIConstants.EDGE_PADDING,
-            screen_y=self.components[-1].screen_y + self.components[-1].height + 2*GUIConstants.COMPONENT_PADDING,
-        ))
