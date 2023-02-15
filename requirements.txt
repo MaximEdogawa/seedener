@@ -4,7 +4,7 @@ picamera
 picamera2
 Pillow==8.2.0
 six==1.16.0
-qrcode
+qrcode==7.3.1
 spidev==3.5
 pyzbar
 RPi.GPIO==0.7.1
