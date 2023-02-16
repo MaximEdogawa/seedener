@@ -90,8 +90,6 @@ QR codes have built-in error correction. The "L" error correction mode is descri
 
 In general, QR codes are incredibly resilient to unreadable blocks. For example, you often see the middle blocks intentionally covered over with a logo:
 
-<table align="center"><tr><td><img src="img/standard_24word_with_logo.png"></td></tr></table>
-
 This is right at the limit of Seedener's ability to read a KeyQR, despite the inaccessible blocks.
 
 Similarly, QR codes can withstand human error during the manual transcription process. A few mis-coded blocks, a smeared ink blob, or other physical blemishes will generally not cause any problems.
