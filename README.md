@@ -47,7 +47,6 @@ Notes:
 
 ---------------
 
-
 # SeedQR Printable Templates
 You can use Seedener to export your key to a hand-transcribed KeyQR format that enables you to instantly load your key back into Seedener.
 
@@ -56,7 +55,7 @@ You can use Seedener to export your key to a hand-transcribed KeyQR format that 
 Standard KeyQR templates:
 * [24-word KeyQR template dots (29x29)](docs/key_qr/printable_templates/dots_29x29.pdf)
 * [24-word KeyQR template grid (29x29)](docs/key_qr/printable_templates/grid_29x29.pdf)
-* [Baseball card template: 24-word KeyQR (29x29)](docs/key_qr/printable_templates/trading_card_29x29_w24words.pdf)
+* [24-word KeyQR template grid (29x29) fingerprint](docs/key_qr/grid_wfingerprint_21x21.pdf)
 
 ---------------
 
@@ -67,7 +66,7 @@ Standard KeyQR templates:
 The Open Pill enclosure design is all about quick, simple and inexpensive depoloyment of a Seedener device. The design does not require any additional hardware and can be printed using a standard FDM 3D printer in about 2 hours, no supports necessary. A video demonstrating the assembly process can be found [here](https://youtu.be/gXPFJygZobEa). To access the design file and printable model, click [here](https://github.com/MaximEdogawa/seedener/enclosures/open_pill).
 
 ### Thanks
-This project is heavily inspired from the SeedSigner Project and I give many thanks to the hard work and knowledge they provided! [here] https://github.com//seedsigner
+This project is heavily inspired from the Project SeedSigner. I give many thanks to the hard work and knowledge they provided! [here] (https://github.com/SeedSigner/seedsigner)
 
 # Manual Installation Instructions
 see the docs: [Manual Installation Instructions](docs/manual_installation.md)
