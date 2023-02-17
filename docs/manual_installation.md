@@ -82,13 +82,13 @@ git checkout yourtargetbranch
 64-bit version for libcamera (Only system site packages)
 ```
 python3 -m venv venv --system-site-packages
-source /venv/bin/activate
+source venv/bin/activate
 ```
 
 32-bit version
 ```
 python3 -m venv venv
-source /venv/bin/activate
+source venv/bin/activate
 ```
 
 ### Install Python `pip` dependencies:
