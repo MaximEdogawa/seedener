@@ -99,7 +99,7 @@ pip install -r requirements.txt
 
 32-bit version (with picamera)
 ```
-pip install -r requirements.txt
+pip install -r requirements_zero.txt
 ```
 
 ### Configure `systemd` to run Seedener at boot:
