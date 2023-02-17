@@ -89,7 +89,7 @@ source /venv/bin/activate
 ```
 python3 -m venv venv
 source /venv/bin/activate
-
+```
 
 ### Install Python `pip` dependencies:
 64-bit version ( with picamera2)
@@ -112,10 +112,10 @@ Add this to lines on the end of /boot/config.txt
 ```
 #spi connect
 dtoverlay=spi0-hw-cs
-
+```
+```
 #camera connect
 dtoverlay=ov5647
-
 ```
 ### Configure 'systemd' to run Seedener at boot:
 Open new seedener.service file
