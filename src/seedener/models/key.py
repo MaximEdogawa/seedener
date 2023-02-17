@@ -75,6 +75,9 @@ class Key:
     
     def get_privateKey_forSigning(self):
         return self.priv_key
+    
+    def get_privateKey_backUp_flow(self):
+        return self.priv_key
 
     def get_pub(self):
         return self.pub_key
@@ -120,4 +123,17 @@ class Key:
 
     def get_encrypted_priv_key(self):
         return self.encrypted_priv_key
+    
+    def compareKey_passphrase(self, passphrase: str = ""):
+        check_hash = hashlib.pbkdf2_hmac(
+                "sha512",
+                self.priv_key.encode("utf-8"),
+                passphrase.encode("utf-8"),
+                PBKDF2_ROUNDS,
+                64,
+            )
+        if(check_hash==self.key_hash_bytes):
+            return True
+        else:
+            return False
 
