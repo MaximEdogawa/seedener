@@ -6,6 +6,7 @@ from seedener.models.qr_type import QRType
 from seedener.gui.components import FontAwesomeIconConstants, SeedenerCustomIconConstants
 from seedener.gui.screens.screen import LoadingScreenThread, WarningScreen
 from seedener.gui.screens.bundle_screens import BundleExportQrDisplayLoopScreen
+from seedener.views.scan_views import ScanView
 
 class BundleMenuView(View):
         def __init__(self):
@@ -43,7 +44,6 @@ class BundleMenuView(View):
                 return Destination(BundleOptionsView, view_args=dict(bundle_num = selected_menu_num))
 
             elif selected_menu_num == len(self.bundles):
-                from seedener.views.scan_views import ScanView
                 return Destination(ScanView)
 
             elif selected_menu_num == RET_CODE__BACK_BUTTON:
