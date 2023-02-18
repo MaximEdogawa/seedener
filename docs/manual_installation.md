@@ -64,7 +64,7 @@ passwd
 
 ### Install dependencies
 ```
-sudo apt-get update && sudo apt-get install build-essential libcap-dev python3-wheel python3-pip python3-venv python3 git
+sudo apt-get update && sudo apt-get install build-essential libcap-dev python3-wheel python3-pip python3-venv python3 git cmake
 ```
 ### Install Rust
 ```
