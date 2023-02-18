@@ -132,7 +132,7 @@ Add this line to it. Remember to change lines with your project directory
 Description=Seedener
 
 [Service]
-User=leo
+User=pi
 WorkingDirectory=/home/pi/seedener/src/
 ExecStart=/home/pi/seedener/venv/bin/python3 main.py > /dev/null 2>&1
 Restart=no
