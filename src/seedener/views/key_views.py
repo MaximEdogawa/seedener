@@ -66,7 +66,7 @@ class KeysMenuView(View):
             return Destination(CreateKeyEntryView, view_args=dict(total_keys=1))
 
         elif selected_menu_num == RET_CODE__BACK_BUTTON:
-            return Destination(BackStackView)
+            return Destination(MainMenuView)
 
 """****************************************************************************
     Loading keys, passphrases, etc
@@ -121,24 +121,34 @@ class CreateKeyEntryView(View):
             raise e
 
         # Cannot return BACK to this View
-        return Destination(KeyWarningView, view_args=dict(key_num= None, passphrase=""), clear_history=True)
+        return Destination(KeyWarningView, view_args=dict(key_num= None), clear_history=True)
 
 """****************************************************************************
     View Key Substring flow
 ****************************************************************************"""
 class KeyWarningView(View):
-    def __init__(self, key_num: int, passphrase: str = ""):
+    def __init__(self, key_num: int):
         super().__init__()
         self.key_num = key_num
-        self.passphrase = passphrase
-
+        if self.key_num is None:
+            self.key = self.controller.inMemoryStore.get_pending_key()
+        else:
+            self.key = self.controller.get_key(self.key_num)
+            
     def run(self):
+        if(self.key.getPasswordProtect()):
+            ret = key_screens.KeyPassphraseScreen(title="Input Passphrase").display() 
+            if ret == RET_CODE__BACK_BUTTON:
+                return Destination(BackStackView)
+            
+            if(self.key.compareKey_passphrase(ret)==False):
+                return Destination(KeyPassphraseBackupKeyRetryView, view_args=dict(key_num=self.key_num))
+
         destination = Destination(
             KeyView,
             view_args=dict(
                 key_num=self.key_num,
                 page_index=0,
-                passphrase=self.passphrase,
             ),
             skip_current_view=True,  # Prevent going BACK to WarningViews
         )
@@ -156,6 +166,28 @@ class KeyWarningView(View):
 
         elif selected_menu_num == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
+        
+class KeyPassphraseBackupKeyRetryView(View):
+    def __init__(self, key_num: int):
+        self.key_num=key_num
+
+    def run(self):
+        BACK = "Back"
+        RETRY = "Try Again"
+        button_data = [RETRY, BACK]
+
+        selected_menu_num = DireWarningScreen(
+            title="Verification Error",
+            show_back_button=False,
+            status_headline=f"Wrong Passphrase!",
+            text=f"Please input the correct passphrase.",
+            button_data=button_data,
+        ).display()
+
+        if button_data[selected_menu_num] == RETRY:
+            return  Destination(KeyWarningView,view_args=dict(key_num=self.key_num)) 
+        elif button_data[selected_menu_num] == BACK:
+            return Destination(KeyOptionsView, view_args=dict(key_num = self.key_num), clear_history=True)
 
 """****************************************************************************
     Views for actions on individual keys:
@@ -164,8 +196,11 @@ class KeyOptionsView(View):
     def __init__(self, key_num: int): 
         super().__init__()
         self.key_num = key_num
-        self.key = self.controller.get_key(self.key_num)
-
+        if self.key_num is None:
+            self.key = self.controller.inMemoryStore.get_pending_key()
+        else:
+            self.key = self.controller.get_key(self.key_num)
+            
     def run(self):
         EXPORT_XPUB = "Export Pub"
         BACKUP = ("Backup key", None, None, None, SeedenerCustomIconConstants.SMALL_CHEVRON_RIGHT)
@@ -194,7 +229,7 @@ class KeyOptionsView(View):
             return Destination(KeyExportPubTypeView, view_args=dict(key_num=self.key_num,))
 
         elif button_data[selected_menu_num] == BACKUP:
-            return Destination(KeyPasshpraseDecisionView, view_args=dict(key_num=self.key_num,))
+            return Destination(KeyBackupView, view_args=dict(key_num=self.key_num,))
 
         elif button_data[selected_menu_num] == DISCARD:
             return Destination(KeyDiscardView, view_args=dict(key_num=self.key_num,))
@@ -203,17 +238,16 @@ class KeyOptionsView(View):
    Export Private Key flow
 ****************************************************************************"""
 class KeyView(View):
-    def __init__(self, key_num: int, page_index: int = 0, passphrase: str = ""):
+    def __init__(self, key_num: int, page_index: int = 0):
         super().__init__()
         self.key_num = key_num
-        self.passphrase = passphrase
         if self.key_num is None:
             self.key = self.controller.inMemoryStore.get_pending_key()
         else:
             self.key = self.controller.get_key(self.key_num)
         
         self.page_index = page_index
-        self.privKeyString = self.key.get_private(self.passphrase)
+        self.privKeyString = self.key.get_privateKey_backUp_flow()
     
     def run(self):
         NEXT = "Next"
@@ -255,8 +289,7 @@ class KeyView(View):
                 return Destination(
                     KeyBackupTestPromptView,
                     view_args=dict(
-                        key_num=self.key_num,
-                        passphrase=self.passphrase,
+                        key_num=self.key_num
                     )
                 )
             else:
@@ -264,9 +297,7 @@ class KeyView(View):
                     KeyView,
                     view_args=dict(
                         key_num=self.key_num, 
-                        page_index=self.page_index + 1,
-                        passphrase=self.passphrase,
-                    )
+                        page_index=self.page_index + 1                    )
                 )
 
         elif button_data[selected_menu_num] == DONE:
@@ -280,32 +311,15 @@ class KeyView(View):
     Export Key as QR
 ****************************************************************************"""
 class KeyTranscribeKeyQRFormatView(View):
-    def __init__(self, key_num: int, passphrase: str = ""):
+    def __init__(self, key_num: int):
         super().__init__()
         self.key_num = key_num
-        self.passphrase = passphrase
 
     def run(self):
         STANDARD = "Standard: 29x29"
-        COMPACT = "Compact: 25x25"
         num_modules_standard = 29
-        num_modules_compact = 25
 
-        if self.settings.get_value(SettingsConstants.SETTING__COMPACT_KEYQR) != SettingsConstants.OPTION__ENABLED:
-            # Only configured for standard KeyQR
-            return Destination(
-                KeyTranscribeKeyQRWarningView,
-                view_args={
-                    "key_num": self.key_num,
-                    "keyqr_format": QRType.KEY__KEYQR,
-                    "num_modules": num_modules_standard,
-                    "passphrase": self.passphrase,
-
-                },
-                skip_current_view=True,
-            ) 
-
-        button_data = [STANDARD, COMPACT]
+        button_data = [STANDARD]
 
         selected_menu_num = key_screens.KeyTranscribeKeyQRFormatScreen( 
             title="KeyQR Format",
@@ -318,26 +332,24 @@ class KeyTranscribeKeyQRFormatView(View):
         if button_data[selected_menu_num] == STANDARD: 
             keyqr_format = QRType.KEY__KEYQR
             num_modules = num_modules_standard
-        else:
-            keyqr_format = QRType.KEY__COMPACTKEYQR 
-            num_modules = num_modules_compact
         
         return Destination(
-            KeyTranscribeKeyQRWarningView,
+                KeyTranscribeKeyQRWarningView,
                 view_args={
                     "key_num": self.key_num,
-                    "keyqr_format": keyqr_format,
-                    "num_modules": num_modules,
-                }
-            )
+                    "keyqr_format": QRType.KEY__KEYQR,
+                    "num_modules": num_modules_standard,
+
+                },
+                skip_current_view=True,
+            ) 
 
 class KeyTranscribeKeyQRWarningView(View):
-    def __init__(self, key_num: int, keyqr_format: str = QRType.KEY__KEYQR, num_modules: int = 29, passphrase: str = ""):
+    def __init__(self, key_num: int, keyqr_format: str = QRType.KEY__KEYQR, num_modules: int = 29):
         super().__init__()
         self.key_num = key_num
         self.keyqr_format = keyqr_format
         self.num_modules = num_modules
-        self.passphrase = passphrase
 
     def run(self):
         destination = Destination(
@@ -346,8 +358,6 @@ class KeyTranscribeKeyQRWarningView(View):
                 "key_num": self.key_num,
                 "keyqr_format": self.keyqr_format,
                 "num_modules": self.num_modules,
-                "passphrase": self.passphrase,
-
             },
             skip_current_view=True,  # Prevent going BACK to WarningViews
         )
@@ -369,17 +379,24 @@ class KeyTranscribeKeyQRWarningView(View):
             return destination  
 
 class KeyTranscribeKeyQRWholeQRView(View):
-    def __init__(self, key_num: int, keyqr_format: str, num_modules: int, passphrase: str = ""):
+    def __init__(self, key_num: int, keyqr_format: str, num_modules: int):
         super().__init__()
         self.key_num = key_num
         self.keyqr_format = keyqr_format
         self.num_modules = num_modules
         self.key = self.controller.get_key(key_num)
-        self.passphrase = passphrase
 
     def run(self):
+        if(self.key.getPasswordProtect()):
+            ret = key_screens.KeyPassphraseScreen(title="Input Passphrase").display() 
+            if ret == RET_CODE__BACK_BUTTON:
+                return Destination(BackStackView)
+            
+            if(self.key.compareKey_passphrase(ret)==False):
+                return Destination(KeyPassphraseTranscribeKeyRetryView, view_args=dict(key_num=self.key_num))
+
         e = EncodeQR(
-            key_phrase=self.key.get_private(self.passphrase),
+            key_phrase=self.key.get_privateKey_backUp_flow(),
             qr_type=self.keyqr_format,
         )
         data = e.next_part()
@@ -398,44 +415,60 @@ class KeyTranscribeKeyQRWholeQRView(View):
                 view_args={
                     "key_num": self.key_num,
                     "keyqr_format": self.keyqr_format,
-                    "passphrase": self.passphrase
                 }
             )
+            
+class KeyPassphraseTranscribeKeyRetryView(View):
+    def __init__(self, key_num: int):
+        self.key_num=key_num
+
+    def run(self):
+        BACK = "Back"
+        RETRY = "Try Again"
+        button_data = [RETRY, BACK]
+
+        selected_menu_num = DireWarningScreen(
+            title="Verification Error",
+            show_back_button=False,
+            status_headline=f"Wrong Passphrase!",
+            text=f"Please input the correct passphrase.",
+            button_data=button_data,
+        ).display()
+
+        if button_data[selected_menu_num] == RETRY:
+            return  Destination(KeyTranscribeKeyQRWholeQRView,view_args=dict(key_num=self.key_num)) 
+        elif button_data[selected_menu_num] == BACK:
+            return Destination(KeyOptionsView, view_args=dict(key_num = self.key_num), clear_history=True)
+
 
 class KeyTranscribeKeyQRZoomedInView(View):
-    def __init__(self, key_num: int, keyqr_format: str, passphrase: str = ""):
+    def __init__(self, key_num: int, keyqr_format: str):
         super().__init__()
         self.key_num = key_num 
         self.keyqr_format = keyqr_format
         self.key = self.controller.get_key(key_num)
-        self.passphrase = passphrase
-
 
     def run(self):
         e = EncodeQR(
-            key_phrase=self.key.get_private(self.passphrase),
+            key_phrase=self.key.get_privateKey_backUp_flow(),
             qr_type=self.keyqr_format,
         )
 
         data = e.next_part()
-        if self.keyqr_format == QRType.KEY__COMPACTKEYQR:
-            num_modules = 21
-        else:
-            num_modules = 25
+        num_modules = 25
 
         key_screens.KeyTranscribeKeyQRZoomedInScreen( 
             qr_data=data,
             num_modules=num_modules,
         ).display()
 
-        return Destination(KeyTranscribeKeyQRConfirmQRPromptView, view_args=dict(key_num=self.key_num, passphrase=self.passphrase))
+        return Destination(KeyTranscribeKeyQRConfirmQRPromptView, view_args=dict(key_num=self.key_num))
 
 class KeyTranscribeKeyQRConfirmQRPromptView(View):
-    def __init__(self, key_num: int, passphrase: str = ""):
+    def __init__(self, key_num: int):
         super().__init__()
         self.key_num = key_num
         self.key = self.controller.get_key(key_num)
-        self.passphrase = passphrase
 
     def run(self):
         SCAN = ("Confirm KeyQR", FontAwesomeIconConstants.QRCODE)
@@ -529,7 +562,7 @@ class KeyExportPubTypeView(View):
         if ret == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
         else:
-            return Destination(KeyExportPubQRDisplayView, view_args=dict(key_num=self.key_num))
+            return Destination(KeyExportPubQRDisplayView, view_args=dict(key_num=self.key_num), clear_history=True)
 
 class KeyTranscribePubKeyQRWholeQRView(View):
     def __init__(self, key_num: int, keyqr_format: str, num_modules: int):
@@ -574,16 +607,17 @@ class KeyExportPubQRDisplayView(View):
 
     def run(self):
         ret = QRDisplayScreen(qr_encoder=self.qr_encoder).display()  
-        return Destination(KeyOptionsView, view_args=dict(key_num=self.key_num))
+        return Destination(KeysMenuView, clear_history=True)
 
 """****************************************************************************
     Key Backup View
 ****************************************************************************"""
 class KeyBackupView(View):
-    def __init__(self, key_num, passphrase: str = ""):
+    def __init__(self, key_num):
         super().__init__()
         self.key_num = key_num
-        self.passphrase = passphrase
+        self.key = self.controller.get_key(key_num)
+
 
     def run(self):
         VIEW_SUBSTRINGS = "View Key"
@@ -592,7 +626,7 @@ class KeyBackupView(View):
 
         button_data = [VIEW_SUBSTRINGS, EXPORT_KEYQR]
 
-        if self.passphrase != "":
+        if(self.key.getPasswordProtect()):
             button_data.append(EXPORT_ENCRYPT_KEYQR)
 
         selected_menu_num = ButtonListScreen(
@@ -602,25 +636,24 @@ class KeyBackupView(View):
         ).display()
 
         if selected_menu_num == RET_CODE__BACK_BUTTON:
-            return Destination(KeysMenuView,view_args=dict(key_num=self.key_num))
+            return Destination(KeysMenuView)
 
         elif button_data[selected_menu_num] == VIEW_SUBSTRINGS:
-            return Destination(KeyWarningView, view_args=dict(key_num=self.key_num, passphrase=self.passphrase), clear_history=True)
+            return Destination(KeyWarningView, view_args=dict(key_num=self.key_num), clear_history=True)
 
         elif button_data[selected_menu_num] == EXPORT_KEYQR:
-            return Destination(KeyTranscribeKeyQRFormatView, view_args=dict(key_num=self.key_num, passphrase=self.passphrase), clear_history=True)
+            return Destination(KeyTranscribeKeyQRFormatView, view_args=dict(key_num=self.key_num), clear_history=True)
 
         elif button_data[selected_menu_num] == EXPORT_ENCRYPT_KEYQR:
-            return Destination(EncryptKeyQRFormatView, view_args=dict(key_num=self.key_num, passphrase=self.passphrase), clear_history=True)
+            return Destination(EncryptKeyQRFormatView, view_args=dict(key_num=self.key_num), clear_history=True)
 
 """****************************************************************************
     Export Encrypted Key as QR
 ****************************************************************************"""
 class EncryptKeyQRFormatView(View):
-    def __init__(self, key_num: int, passphrase: str = ""):
+    def __init__(self, key_num: int):
         super().__init__()
         self.key_num = key_num
-        self.passphrase = passphrase
             
     def run(self):
         ret = WarningScreen(
@@ -633,18 +666,28 @@ class EncryptKeyQRFormatView(View):
         if ret == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
         else:
-            return Destination(KeyExportEncryptQRDisplayView, view_args=dict(key_num=self.key_num, passphrase=self.passphrase))
+            return Destination(KeyExportEncryptQRDisplayView, view_args=dict(key_num=self.key_num))
 
 class KeyExportEncryptQRDisplayView(View):
-    def __init__(self, key_num: int, passphrase: str = ""):
+    def __init__(self, key_num: int):
         super().__init__()
         self.key = self.controller.get_key(key_num)
         self.key_num = key_num
-        self.passphrase= passphrase
 
+    def run(self):
+        if(self.key.getPasswordProtect()):
+            ret = key_screens.KeyPassphraseScreen(title="Input Passphrase").display() 
+            if ret == RET_CODE__BACK_BUTTON:
+                return Destination(BackStackView)
+            
+            if(self.key.compareKey_passphrase(ret)==False):
+                return Destination(KeyPassphraseEncryptKeyRetryView, view_args=dict(key_num=self.key_num))
+        else:
+            return Destination(KeyOptionsView, view_args=dict(key_num=self.key_num))
+  
         qr_density = self.settings.get_value(SettingsConstants.SETTING__QR_DENSITY)
         qr_type = QRType.KEY__KEYQR
-        self.key.set_encrypted_priv_key(self.passphrase)
+        self.key.set_encrypted_priv_key(ret)
         encrypted_key = self.key.get_encrypted_priv_key()
         if type(encrypted_key)==bytes:
             encrypted_key = encrypted_key.decode('utf-8')
@@ -654,10 +697,30 @@ class KeyExportEncryptQRDisplayView(View):
             qr_type=qr_type,
             qr_density=qr_density,
         )
+        ret2 = QRDisplayScreen(qr_encoder=self.qr_encoder).display()  
+        return Destination(KeyOptionsView, view_args=dict(key_num=self.key_num))
+    
+class KeyPassphraseEncryptKeyRetryView(View):
+    def __init__(self, key_num: int):
+        self.key_num=key_num
 
     def run(self):
-        ret = QRDisplayScreen(qr_encoder=self.qr_encoder).display()  
-        return Destination(KeyOptionsView, view_args=dict(key_num=self.key_num))
+        BACK = "Back"
+        RETRY = "Try Again"
+        button_data = [RETRY,BACK]
+
+        selected_menu_num = DireWarningScreen(
+            title="Verification Error",
+            show_back_button=False,
+            status_headline=f"Wrong Passphrase!",
+            text=f"Please input the correct passphrase.",
+            button_data=button_data,
+        ).display()
+
+        if button_data[selected_menu_num] == RETRY:
+            return  Destination(KeyExportEncryptQRDisplayView,view_args=dict(key_num=self.key_num)) 
+        elif button_data[selected_menu_num] == BACK:
+            return Destination(KeyOptionsView, view_args=dict(key_num = self.key_num), clear_history=True)
 
 
 """****************************************************************************
@@ -677,7 +740,7 @@ class KeyDiscardView(View):
         DISCARD = ("Discard", None, None, "red")
         button_data = [KEEP, DISCARD]
 
-        fingerprint = self.key.get_fingerprint(self.settings.get_value(SettingsConstants.SETTING__NETWORK))
+        fingerprint = self.key.get_fingerprint()[:15] + "..."
         selected_menu_num = WarningScreen(
             title="Discard in Memory Key?!",
             status_headline=None,
@@ -694,19 +757,49 @@ class KeyDiscardView(View):
                 return Destination(KeyFinalizeView, skip_current_view=True,)
 
         elif button_data[selected_menu_num] == DISCARD:
+            if(self.key.getPasswordProtect()):
+                ret = key_screens.KeyPassphraseScreen(title="Input Passphrase").display() 
+                if ret == RET_CODE__BACK_BUTTON:
+                    return Destination(BackStackView)
+            
+                if(self.key.compareKey_passphrase(ret)==False):
+                    return Destination(KeyPassphraseDeleteRetryView, view_args=dict(key_num=self.key_num))
+
             if self.key_num is not None:
                 self.controller.discard_key(self.key_num)
             else:
                 self.controller.inMemoryStore.clear_pending_key()
             return Destination(MainMenuView, clear_history=True)
+        
+class KeyPassphraseDeleteRetryView(View):
+    def __init__(self, key_num: int):
+        self.key_num=key_num
+
+    def run(self):
+        BACK = "Back"
+        RETRY = "Try Again"
+        button_data = [RETRY, BACK]
+
+        selected_menu_num = DireWarningScreen(
+            title="Verification Error",
+            show_back_button=False,
+            status_headline=f"Wrong Passphrase!",
+            text=f"Please input the correct passphrase.",
+            button_data=button_data,
+        ).display()
+
+        if button_data[selected_menu_num] == RETRY:
+            return  Destination(KeyDiscardView,view_args=dict(key_num=self.key_num)) 
+        elif button_data[selected_menu_num] == BACK:
+            return Destination(KeyOptionsView, view_args=dict(key_num = self.key_num), clear_history=True)
+
 
 """****************************************************************************
     Key SubString Backup Test
 ****************************************************************************"""
 class KeyBackupTestPromptView(View):
-    def __init__(self, key_num: int, passphrase: str = ""):
+    def __init__(self, key_num: int):
         self.key_num = key_num
-        self.passhprase = passphrase
 
     def run(self):
         VERIFY = "Verify"
@@ -740,8 +833,8 @@ class KeyBackupTestView(View):
         self.confirmed_list = confirmed_list
         if not self.confirmed_list:
             self.confirmed_list = []
-        
-        self.substrings = wrap(self.key.get_private(), SUBSTRING_LENGTH)
+         
+        self.substrings = wrap(self.key.get_privateKey_backUp_flow(), SUBSTRING_LENGTH)
         self.cur_index = cur_index
 
     def run(self):
@@ -877,75 +970,7 @@ class KeyFinalizeView(View):
             return Destination(KeysMenuView, clear_history=True)
 
         elif button_data[selected_menu_num] == PASSPHRASE:
-            return Destination(KeyAddPassphraseView)
-
-class KeyAddPassphraseView(View):
-    def __init__(self):
-        super().__init__()
-        self.key = self.controller.inMemoryStore.get_pending_key()
-
-    def run(self):
-        ret = key_screens.KeyPassphraseScreen().display()  
-
-        if ret == RET_CODE__BACK_BUTTON:
-            return Destination(BackStackView)
-        
-        # The new passphrase will be the return value
-        return Destination(KeyReviewPassphraseView, view_args=dict(passphrase=ret))
-
-class KeyPasshpraseDecisionView(View):
-    def __init__(self, key_num: int):
-        super().__init__()
-        self.key_num = key_num
-        if self.key_num is None:
-            self.key = self.controller.inMemoryStore.get_pending_key()
-        else:
-            self.key = self.controller.get_key(self.key_num)
-
-    def run(self):
-        if(self.key.getPasswordProtect()):
-            return  Destination(InputPassphraseView,view_args=dict(key_num=self.key_num))
-        else:
-            return Destination(KeyBackupView,view_args=dict(key_num=self.key_num, passphrase=""))
-
-
-class InputPassphraseView(View):
-    def __init__(self, key_num: int):
-        super().__init__()
-        self.key_num = key_num
-        self.passphrase: str = ""
-
-    def run(self):
-        ret = key_screens.KeyPassphraseScreen(title="Input Passphrase", passphrase=self.passphrase).display() 
-
-        if ret == RET_CODE__BACK_BUTTON:
-            return Destination(BackStackView)
-        
-        # The passphrase will be the return value
-        self.passphrase = ret
-        return Destination(CheckKeyInputView,
-                view_args=dict(
-                key_num=self.key_num,
-                passphrase=self.passphrase
-            )
-        )
-
-class CheckKeyInputView(View):
-    def __init__(self, key_num: int , passphrase: str = ""):
-        super().__init__()
-        self.key_num = key_num
-        self.passphrase = passphrase
-        if self.key_num is None:
-            self.key = self.controller.inMemoryStore.get_pending_key()
-        else:
-            self.key = self.controller.get_key(self.key_num)
-        
-    def run(self):
-        if(self.key.get_private(self.passphrase)!=""):
-            return Destination(KeyBackupView, view_args=dict(key_num= self.key_num, passphrase=self.passphrase), clear_history=True)
-        else:
-            return Destination(KeyPassphraseRetryView, view_args=dict(key_num=self.key_num))
-
+            return Destination(KeyReviewPassphraseView)
 
 class KeyPassphraseRetryView(View):
     def __init__(self, key_num: int):
@@ -954,7 +979,7 @@ class KeyPassphraseRetryView(View):
     def run(self):
         BACK = "Back"
         RETRY = "Try Again"
-        button_data = [BACK,RETRY]
+        button_data = [RETRY, BACK]
 
         selected_menu_num = DireWarningScreen(
             title="Verification Error",
@@ -965,43 +990,42 @@ class KeyPassphraseRetryView(View):
         ).display()
 
         if button_data[selected_menu_num] == RETRY:
-            return  Destination(InputPassphraseView,view_args=dict(key_num=self.key_num)) 
+            return  Destination(KeyReviewPassphraseView,view_args=dict(key_num=self.key_num)) 
         elif button_data[selected_menu_num] == BACK:
             return Destination(KeyOptionsView, view_args=dict(key_num = self.key_num), clear_history=True)
 
 class KeyReviewPassphraseView(View):
-    def __init__(self, passphrase: str = ""):
+    def __init__(self):
         super().__init__()
         self.key = self.controller.inMemoryStore.get_pending_key()
-        self.passhrase = passphrase
 
     def run(self):
+        # The new passphrase will be the return value
+        ret = key_screens.KeyPassphraseScreen().display() 
+        if ret == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+         
         EDIT = "Edit passphrase"
         DONE = "Done"
         button_data = [EDIT, DONE]
-
-        # Get the before/after fingerprints
-        network = self.settings.get_value(SettingsConstants.SETTING__NETWORK)
-        # Only 10 char for fingerprint for display purpose
         fingerprint_with = self.key.get_fingerprint()[:4] + "..."
-        self.key.set_passphrase(self.passhrase)
         fingerprint_without = self.key.get_fingerprint()[:4] + "..."
         # Because we have ane explicit "Edit" button, we disable "BACK" to keep the
         # routing options sane.
         #TODO: Review if showing password to the user is good for usablity or bad for security
-        #hiddenPassphrase = "*" * len(self.passhrase)
         selected_menu_num = key_screens.KeyReviewPassphraseScreen( 
             fingerprint_without=fingerprint_without,
             fingerprint_with=fingerprint_with,
-            passphrase=self.passhrase, 
+            passphrase=ret, 
             button_data=button_data,
             show_back_button=False,
         ).display()
 
         if button_data[selected_menu_num] == EDIT:
-            return Destination(KeyAddPassphraseView)
+            return Destination(KeyReviewPassphraseView)
         
         elif button_data[selected_menu_num] == DONE:
+            self.key.set_passphrase(ret)
             self.controller.inMemoryStore.finalize_pending_key()
             return Destination(KeysMenuView, clear_history=True)
             
