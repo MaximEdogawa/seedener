@@ -1,3 +1,4 @@
+blspy==1.0.14
 clvm_tools_rs==0.1.22
 hsms
 numpy
