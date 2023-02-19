@@ -194,7 +194,7 @@ class RestartView(View):
             if Settings.HOSTNAME == Settings.SEEDENER_OS:
                 call("kill $(pidof python*) & python /opt/src/main.py", shell=True)
             else:
-                call("kill $(ps aux | grep '[p]ython.*main.py' | awk '{print $2}')", shell=True)
+                call("sudo reboot", shell=True)
 
 
 
