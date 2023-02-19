@@ -13,7 +13,8 @@ class ST7789(object):
 
         
         #Initialize DC RST pin
-        if GPIO.RPI_INFO['TYPE'] == 'Compute Module 4' or GPIO.RPI_INFO['P1_REVISION'] == 3: 
+        #TODO: Check fo raspberry pi  all types 2,3,4
+        if GPIO.RPI_INFO['TYPE'] == 'Compute Module 4': 
             self._rst = 27
             self._dc = 25
             self._bl = 18
