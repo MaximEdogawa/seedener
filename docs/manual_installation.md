@@ -150,7 +150,7 @@ Use `CTRL-X` and `y` to exit and save changes.
 
 Configure the service to start running (this will restart the seedsigner code automatically at startup and if it crashes):
 ```
-sudo systemctl enable seedsigner.service
+sudo systemctl enable seedener.service
 ```
 
 Now reboot the Raspberry Pi:
