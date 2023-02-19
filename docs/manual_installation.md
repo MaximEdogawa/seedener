@@ -64,7 +64,7 @@ passwd
 
 ### Install dependencies
 ```
-sudo apt-get update && sudo apt-get install build-essential libcap-dev python3-wheel python3-pip python3-venv python3 git cmake
+sudo apt-get update && sudo apt-get install build-essential libcap-dev python3-wheel python3-pip python3-venv python3 git cmake zbar-tools libssl-dev
 ```
 ### Install Rust
 ```
@@ -105,6 +105,7 @@ pip install -r requirements.txt
 ```
 pip install -r requirements_zero.txt
 ```
+Notice that it can take a long time to build blspy==1.0.14 and clvm_tools_rs==0.1.22 in rust & c on raspberry pi zero. Build it seperatly if you have problems. I could take hours to build!
 
 ### Configure `systemd` to run Seedener at boot:
 ```
