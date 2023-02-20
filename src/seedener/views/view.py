@@ -215,7 +215,7 @@ class PowerOffView(View):
                     #Controller.get_instance().microsd.stop()
                     #subprocess.call("poweroff", shell=True)
                 #else:
-                os.system("sudo systemctl poweroff")
+                os.system("sudo shutdown -h now")
 
 
 
