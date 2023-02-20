@@ -194,7 +194,7 @@ class RestartView(View):
             #if Settings.HOSTNAME == Settings.SEEDENER_OS:
             #    subprocess.call("kill $(pidof python*) & python /opt/src/main.py", shell=True)
             #else:
-                os.system("shutdown /r /t 1")
+                os.system("sudo systemctl restart seedener")
 
 class PowerOffView(View):
     def run(self):
@@ -215,7 +215,7 @@ class PowerOffView(View):
                     #Controller.get_instance().microsd.stop()
                     #subprocess.call("poweroff", shell=True)
                 #else:
-                os.system("shutdown /s /t 1")
+                os.system("sudo systemctl poweroff")
 
 
 
