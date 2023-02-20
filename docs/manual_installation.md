@@ -134,8 +134,10 @@ Description=Seedener
 
 [Service]
 User=pi
+Group=pi
+Environment="PATH=/home/pi/seedener/venv/bin"
 WorkingDirectory=/home/pi/seedener/src/
-ExecStart=/home/pi/seedener/venv/bin/python3 main.py > /dev/null 2>&1
+ExecStart=/home/pi/seedener/venv/bin/python3.9 main.py > /dev/null 2>&1
 Restart=no
 
 [Install]

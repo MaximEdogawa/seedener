@@ -183,20 +183,18 @@ class RestartView(View):
     class DoResetThread(BaseThread):
         def run(self):
             import time
-            from subprocess import call
-
+            import os
             # Give the screen just enough time to display the reset message before
             # exiting.
             time.sleep(0.25)
-
+            while self.keep_running:
+                time.sleep(5)
             # Kill the seedener process; Running the process again.
             # `.*` is a wildcard to detect either `python`` or `python3`.
-            if Settings.HOSTNAME == Settings.SEEDENER_OS:
-                call("kill $(pidof python*) & python /opt/src/main.py", shell=True)
-            else:
-                call("sudo reboot", shell=True)
-
-
+            #if Settings.HOSTNAME == Settings.SEEDENER_OS:
+            #    subprocess.call("kill $(pidof python*) & python /opt/src/main.py", shell=True)
+            #else:
+                os.system("shutdown /r /t 1")
 
 class PowerOffView(View):
     def run(self):
@@ -208,16 +206,16 @@ class PowerOffView(View):
     class PowerOffThread(BaseThread):
         def run(self):
             import time
-            from subprocess import call
+            import os
             while self.keep_running:
                 time.sleep(5)
-                if Settings.HOSTNAME == Settings.SEEDENER_OS:
+                #if Settings.HOSTNAME == Settings.SEEDENER_OS:
                     # disable microsd detection before shutdown to prevent display of toast notification during shutdown
-                    from seedener.controller import Controller
-                    Controller.get_instance().microsd.stop()
-                    call("poweroff", shell=True)
-                else:
-                    call("sudo shutdown --poweroff now", shell=True)
+                    #from seedener.controller import Controller
+                    #Controller.get_instance().microsd.stop()
+                    #subprocess.call("poweroff", shell=True)
+                #else:
+                os.system("shutdown /s /t 1")
 
 
 
