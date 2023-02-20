@@ -7,7 +7,7 @@ from seedener.models.singleton import Singleton
 class HardwareButtons(Singleton):
     print(GPIO.RPI_INFO)
     #TODO: Check fo raspberry pi  all types 2,3,4
-    if GPIO.RPI_INFO['TYPE'] == 'Compute Module 4': 
+    if GPIO.RPI_INFO['TYPE'] == 'Compute Module 4' or GPIO.RPI_INFO['TYPE'] == 'Zero W': 
         print("Detected 40pin GPIO (Raspberry pi compute, 2 and above)")
         KEY_UP_PIN     = 6 
         KEY_DOWN_PIN   = 19
@@ -31,7 +31,7 @@ class HardwareButtons(Singleton):
         KEY2_PIN = 38
         KEY3_PIN = 36
 
-    else:
+    elif GPIO.RPI_INFO['TYPE'] =='P1 1':
         print("Assuming 26 Pin GPIO (Raspberry P1 1)")
         KEY_UP_PIN = 5
         KEY_DOWN_PIN = 11
@@ -42,6 +42,18 @@ class HardwareButtons(Singleton):
         KEY1_PIN = 16
         KEY2_PIN = 12
         KEY3_PIN = 8
+        
+    else:
+        KEY_UP     = 6 
+        KEY_DOWN   = 19
+        KEY_LEFT   = 5
+        KEY_RIGHT  = 26
+        KEY_PRESS  = 13
+
+        KEY1       = 21
+        KEY2       = 20
+        KEY3       = 16
+
 
     @classmethod
     def get_instance(cls):
@@ -193,7 +205,7 @@ class HardwareButtons(Singleton):
         
 class HardwareButtonsConstants:
     #TODO: Check fo raspberry pi  all types 2,3,4
-    if GPIO.RPI_INFO['TYPE'] == 'Compute Module 4': 
+    if GPIO.RPI_INFO['TYPE'] == 'Compute Module 4' or GPIO.RPI_INFO['TYPE'] == 'Zero W': 
         KEY_UP     = 6 
         KEY_DOWN   = 19
         KEY_LEFT   = 5
@@ -213,7 +225,7 @@ class HardwareButtonsConstants:
         KEY1 = 40
         KEY2 = 38
         KEY3 = 36
-    else:
+    elif GPIO.RPI_INFO['TYPE'] =='P1 1':
         KEY_UP = 5
         KEY_DOWN = 11
         KEY_LEFT = 3
@@ -223,6 +235,17 @@ class HardwareButtonsConstants:
         KEY1 = 16
         KEY2 = 12
         KEY3 = 8
+    else:
+        KEY_UP     = 6 
+        KEY_DOWN   = 19
+        KEY_LEFT   = 5
+        KEY_RIGHT  = 26
+        KEY_PRESS  = 13
+
+        KEY1       = 21
+        KEY2       = 20
+        KEY3       = 16
+
 
     OVERRIDE = 1000
 
