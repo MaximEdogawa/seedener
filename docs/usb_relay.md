@@ -87,8 +87,6 @@ At the password prompt enter the Pi's default password: `raspberry`
 
 If you now see the Pi's command prompt, you're in!
 
-<img src="img/usb_relay_01.png">
-
 Notice this warning in particular:
 ```
 SSH is enabled and the default password for the 'pi' user has not been changed.
@@ -107,39 +105,6 @@ passwd: password updated successfully
 
 
 ## Configure host computer to share internet access with the Pi
-
-### macOS
-Open the "Network" system settings. You should see an entry called "RNDIS/Ethernet Gadget":
-
-<img src="img/usb_relay_mac_01.png">
-
-Click "Advanced" and change "Configure IPv6" to "Link-local only":
-
-<img src="img/usb_relay_mac_02.png">
-
-Click "OK" and save your changes.
-
-Now go to the "Sharing" system settings. Click on "Internet Sharing" and check the "RNDIS/Ethernet Gadget". 
-
-<img src="img/usb_relay_mac_03.png">
-
-Click the "Internet Sharing" checkbox to activate.
-
-Back at your SSH terminal, test the connection:
-```
-ping 8.8.8.8
-```
-
-_Hit `CTRL-C` to abort the ping_
-
-If you see a ping response, the Pi has internet access!
-
-<img src="img/usb_relay_mac_04.png">
-
-
-### Windows
-see: https://www.circuitbasics.com/raspberry-pi-zero-ethernet-gadget/
-
 
 ### Linux
 To enable IP forwarding on your Host:
@@ -189,8 +154,6 @@ Eject the SD card and insert it into your Pi Zero 1.3. Plug a USB cable into you
 
 Type `lsusb` to see if your Pi Zero is properly connected. Look for `Ethernet/RNDIS Gadget`:
 
-![Static IP on the seedener Interface](img/usb_relay_linux_01.png)
-
 Set a name for your new Interface:
 ```
 nano /etc/systemd/network/10-rename-rpi0.link
@@ -221,8 +184,6 @@ post-up /sbin/iptables -t nat -A POSTROUTING -o <def_iface> -j MASQUERADE
 Reboot your computer.
 
 To see if everything is set up correctly, type `ifconfig` and look for the `seedener0` interface. It should have the <host_ip> assigned to it. 
-
-![Static IP on the seedener Interface](img/usb_relay_linux_02.png)
 
 Continue by configuring your host computer to [share internet access](#linux) with your Pi Zero.
 
