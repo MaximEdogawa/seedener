@@ -139,7 +139,7 @@ NOPASSWD:/usr/bin/systemctl restart seedener
 NOPASSWD:/sbin/shutdown
 Environment="PATH=/home/pi/seedener/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 WorkingDirectory=/home/pi/seedener/src/
-ExecStart=/home/pi/seedener/venv/bin/python3.9 main.py > /dev/null 2>&1
+ExecStart=/home/pi/seedener/venv/bin/python3 main.py > /dev/null 2>&1
 Restart=always
 
 [Install]
