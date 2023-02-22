@@ -5,8 +5,10 @@ To generate keys and air-gapped sign spend bundles.
 # Project Summary
 Seedner offers anyone the opportunity to build a verifiably air-gapped, stateless Chia signing device using inexpensive, publicly available hardware components. 
 
-The goal of Seedener is to make Chia custody solution more accessible to users. By providing a user interface were they can easily create, transcribe and export Keys for signing Spend Bundles which are used for custody solution. 
+The goal of Seedener is to make Chia custody solution more accessible to users. By providing a user interface where they can easily create, transcribe and export Keys for signing Spend Bundles which are used for Chia custody solution vaults.
 
+# User guide info
+Multiple Keys are generated on Seedener device, pub KeyQRs are exported and a vault will be created on a companion app (Seedsaver). To withdraw from a vault a Spend Bundle has to be exported from the companion app via KeyQRLoop to the Seedener device and signed afterwards.
 
 ### Feature Highlights:
 * Create Keys for custody solution
@@ -22,7 +24,7 @@ The goal of Seedener is to make Chia custody solution more accessible to users. 
 
 ### Planned Upcoming Improvements / Functionality:
 * Build a companion app to create & scan Spend Bundle QRs and send them to the blockchain
-* Encrypted QRKey print via usb/TTL printer
+* Encrypted KeyQR print via usb/TTL printer
 * Add Green Pill enclosure
 * Other optimizations based on user feedback!
 
@@ -36,7 +38,7 @@ The goal of Seedener is to make Chia custody solution more accessible to users. 
 
 To build a Seedener, you will need:
 
-* Raspberry Pi Zero (preferably version 1.3 with no WiFi/Bluetooth capability, but any Raspberry Pi 2/3/4, Zero or Compute 4 model will work, Raspberry Pi 1 devices will require a hardware modification to the Waveshare LCD Hat, as per the [instructions here](./docs/legacy_hardware.md))
+* Raspberry Pi Zero (preferably version 1.3 with no WiFi/Bluetooth capability, but any Raspberry Pi 2/3/4, Zero or Compute 4 model will work.
 * Waveshare 1.3" 240x240 pxl LCD (correct pixel count is important, more info at https://www.waveshare.com/wiki/1.3inch_LCD_HAT)
 * Pi Zero-compatible camera (tested to work with the Aokin / AuviPal 5MP 1080p with OV5647 Sensor)
 
@@ -47,7 +49,7 @@ Notes:
 
 ---------------
 
-# SeedQR Printable Templates
+# KeyQR Printable Templates
 You can use Seedener to export your key to a hand-transcribed KeyQR format that enables you to instantly load your key back into Seedener.
 
 [More information about KeyQRs](docs/key_qr/README.md)
@@ -72,5 +74,5 @@ This project is heavily inspired from the Project SeedSigner. I give many thanks
 see the docs: [Manual Installation Instructions](docs/manual_installation.md)
 
 # Donations to
-- MaximEdogawa.xch
-- did:chia:1w0hjc9aja50f0895f8lj3pfvxdcp3ngl0e0yk64lz3yw34js5mvstx2cnk
+- MaximEdogawa.xch - did:chia:1w0hjc9aja50f0895f8lj3pfvxdcp3ngl0e0yk64lz3yw34js5mvstx2cnk
+- Chia Address: xch1dv8hyhpclwgsz74a7g5lrpad4u0qap55yekg4yq25uwkvvfzhegq7qz7u3
