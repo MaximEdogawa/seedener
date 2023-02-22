@@ -68,7 +68,7 @@ Standard KeyQR templates:
 The Open Pill enclosure design is all about quick, simple and inexpensive depoloyment of a Seedener device. The design does not require any additional hardware and can be printed using a standard FDM 3D printer in about 2 hours, no supports necessary. A video demonstrating the assembly process can be found [here](https://youtu.be/gXPFJygZobEa). To access the design file and printable model, click [here](https://github.com/MaximEdogawa/seedener/tree/main/enclosures/open_pill).
 
 ### Thanks
-This project is heavily inspired from the Project SeedSigner. I give many thanks to the hard work and knowledge they provided! [here] (https://github.com/SeedSigner/seedsigner)
+This project is heavily inspired from the Project SeedSigner. I give many thanks to the hard work and knowledge they provided! [here](https://github.com/SeedSigner/seedsigner)
 
 # Manual Installation Instructions
 see the docs: [Manual Installation Instructions](docs/manual_installation.md)
