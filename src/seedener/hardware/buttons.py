@@ -7,26 +7,25 @@ from seedener.models.singleton import Singleton
 class HardwareButtons(Singleton):
     print(GPIO.RPI_INFO)
     if GPIO.RPI_INFO['TYPE'] == 'Zero': 
+        print("Detected 40pin GPIO (Raspberry pi Zero)")
         KEY_UP = 31
         KEY_DOWN = 35
         KEY_LEFT = 29
         KEY_RIGHT = 37
         KEY_PRESS = 33
-
         KEY1 = 40
         KEY2 = 38
         KEY3 = 36
     elif GPIO.RPI_INFO['TYPE'] == 'Compute Module 4' or GPIO.RPI_INFO['TYPE'] == 'Zero W' or GPIO.RPI_INFO['P1_REVISION'] == 3: 
+        print("Detected 40pin GPIO (Raspberry pi compute, 2 and above)")
         KEY_UP     = 6 
         KEY_DOWN   = 19
         KEY_LEFT   = 5
         KEY_RIGHT  = 26
         KEY_PRESS  = 13
-
         KEY1       = 21
         KEY2       = 20
         KEY3       = 16
-
     elif GPIO.RPI_INFO['TYPE'] == 'P1 1':
         print("Assuming 26 Pin GPIO (Raspberry P1 1)")
         KEY_UP_PIN = 5
@@ -34,18 +33,15 @@ class HardwareButtons(Singleton):
         KEY_LEFT_PIN = 3
         KEY_RIGHT_PIN = 15
         KEY_PRESS_PIN = 7
-
         KEY1_PIN = 16
         KEY2_PIN = 12
         KEY3_PIN = 8
-        
     else:
         KEY_UP     = 6 
         KEY_DOWN   = 19
         KEY_LEFT   = 5
         KEY_RIGHT  = 26
         KEY_PRESS  = 13
-
         KEY1       = 21
         KEY2       = 20
         KEY3       = 16
@@ -206,7 +202,6 @@ class HardwareButtonsConstants:
         KEY_LEFT = 29
         KEY_RIGHT = 37
         KEY_PRESS = 33
-
         KEY1 = 40
         KEY2 = 38
         KEY3 = 36
@@ -216,31 +211,27 @@ class HardwareButtonsConstants:
         KEY_LEFT   = 5
         KEY_RIGHT  = 26
         KEY_PRESS  = 13
-
         KEY1       = 21
         KEY2       = 20
         KEY3       = 16
-    elif GPIO.RPI_INFO['TYPE'] =='P1 1':
-        KEY_UP = 5
-        KEY_DOWN = 11
-        KEY_LEFT = 3
-        KEY_RIGHT = 15
-        KEY_PRESS = 7
-
-        KEY1 = 16
-        KEY2 = 12
-        KEY3 = 8
+    elif GPIO.RPI_INFO['TYPE'] == 'P1 1':
+        KEY_UP_PIN = 5
+        KEY_DOWN_PIN = 11
+        KEY_LEFT_PIN = 3
+        KEY_RIGHT_PIN = 15
+        KEY_PRESS_PIN = 7
+        KEY1_PIN = 16
+        KEY2_PIN = 12
+        KEY3_PIN = 8
     else:
         KEY_UP     = 6 
         KEY_DOWN   = 19
         KEY_LEFT   = 5
         KEY_RIGHT  = 26
         KEY_PRESS  = 13
-
         KEY1       = 21
         KEY2       = 20
         KEY3       = 16
-
 
     OVERRIDE = 1000
 
