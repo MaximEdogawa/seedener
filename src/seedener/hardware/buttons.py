@@ -7,7 +7,7 @@ from seedener.models.singleton import Singleton
 class HardwareButtons(Singleton):
     print(GPIO.RPI_INFO)
     #TODO: Check fo raspberry pi  all types 2,3,4
-    if GPIO.RPI_INFO['TYPE'] == 'Compute Module 4' or GPIO.RPI_INFO['TYPE'] == 'Zero W': 
+    if GPIO.RPI_INFO['TYPE'] == 'Compute Module 4' or GPIO.RPI_INFO['TYPE'] == 'Zero W' or GPIO.RPI_INFO['P1_REVISION'] == 3: 
         print("Detected 40pin GPIO (Raspberry pi compute, 2 and above)")
         KEY_UP_PIN     = 6 
         KEY_DOWN_PIN   = 19
@@ -205,7 +205,7 @@ class HardwareButtons(Singleton):
         
 class HardwareButtonsConstants:
     #TODO: Check fo raspberry pi  all types 2,3,4
-    if GPIO.RPI_INFO['TYPE'] == 'Compute Module 4' or GPIO.RPI_INFO['TYPE'] == 'Zero W': 
+    if GPIO.RPI_INFO['TYPE'] == 'Compute Module 4' or GPIO.RPI_INFO['TYPE'] == 'Zero W' or GPIO.RPI_INFO['P1_REVISION'] == 3: 
         KEY_UP     = 6 
         KEY_DOWN   = 19
         KEY_LEFT   = 5
