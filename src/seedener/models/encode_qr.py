@@ -17,7 +17,7 @@ class EncodeQR:
     passphrase: str = None
     derivation: str = None
     qr_type: str = None
-    qr_density: str = SettingsConstants.DENSITY__MEDIUM
+    qr_density: str = SettingsConstants.DENSITY__HIGH
     chunk_size: int = 0
 
     def __post_init__(self):
@@ -27,7 +27,7 @@ class EncodeQR:
             raise Exception('qr_type is required')
 
         if self.qr_density == None:
-            self.qr_density = SettingsConstants.DENSITY__MEDIUM
+            self.qr_density = SettingsConstants.DENSITY__HIGH
 
         self.encoder: BaseQrEncoder = None
 
@@ -52,8 +52,10 @@ class EncodeQR:
         part = self.next_part()
         if self.qr_type == QRType.KEY__KEYQR:
             return self.qr.qrimage(part, width, height, border)
+        elif self.qr_type == QRType.BUNDLE__QR:
+            return self.qr.qrimage_io(part, width, height, border, background_color=background_color, qrversion=10)
         else:
-            return self.qr.qrimage_io(part, width, height, border, background_color=background_color)
+            raise Exception('QR Type not supported')
 
     # TODO: Make these properties?
     def get_is_complete(self):
