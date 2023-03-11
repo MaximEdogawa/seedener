@@ -10,23 +10,24 @@ class ST7789(object):
     def __init__(self):
         self.width = 240
         self.height = 240
-
-        
         #Initialize DC RST pin
         #TODO: Check fo raspberry pi  all types 2,3,4
         if GPIO.RPI_INFO['TYPE'] == 'Compute Module 4': 
+            print("Detected 40pin GPIO (Raspberry pi compute)")
             self._rst = 27
             self._dc = 25
             self._bl = 18
             GPIO.setmode(GPIO.BCM)
-
+            
         elif GPIO.RPI_INFO['TYPE'] == "Zero" or GPIO.RPI_INFO['TYPE'] == 'P1 1':
+            print("Detected 40pin GPIO (Raspberry pi Zero)")
             self._rst = 13
             self._dc = 22
             self._bl = 18
             GPIO.setmode(GPIO.BOARD)
         
         else:
+            print("Detected 40pin GPIO (Raspberry pi 2 and above)")
             self._rst = 27
             self._dc = 25
             self._bl = 18
