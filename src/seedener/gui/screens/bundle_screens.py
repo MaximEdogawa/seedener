@@ -60,13 +60,13 @@ class BundleExportQrDisplayLoopScreen(BaseScreen):
         
         if(chunk==total_chunks):
             i=0
-            while i < chunk :
+            while i < total_chunks :
                 payload : bytes= chunks_list[i].encode('utf-8')
+                chunk = i+1
                 header['chunk'] = chunk
                 data : bytes = b''.join([ header[k].to_bytes(header_size[k], 'big') for k in header ]) + payload
                 content += b32encode(data).decode('ascii').replace('=', '%')
-                i+= 1
-            
+                i+= 1     
             
             qr_encoder = EncodeQR(
                 key_phrase=content,  
