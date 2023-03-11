@@ -12,8 +12,8 @@ class QR:
     def __init__(self) -> None:
         return
 
-    def qrimage(self, data, width=240, height=240, border=3, style=None, background_color="#444"):
-        qr = qrcode.QRCode( version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=5, border=border )
+    def qrimage(self, data, width=240, height=240, border=3, style=None, background_color="#444", qrversion=1):
+        qr = qrcode.QRCode( version=qrversion, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=5, border=border )
         qr.add_data(data)
         qr.make(fit=True)
         if not style or style == QR.STYLE__DEFAULT:
@@ -36,7 +36,7 @@ class QR:
                 ).resize((width,height)).convert('RGBA')
 
 
-    def qrimage_io(self, data, width=240, height=240, border=3, background_color="808080"):
+    def qrimage_io(self, data, width=240, height=240, border=3, background_color="808080", qrversion=1):
         if 1 <= border <= 10:
             border_str = str(border)
         else:
@@ -47,7 +47,7 @@ class QR:
 
         # if qrencode fails, fall back to only encoder
         if rv != 0:
-            return self.qrimage(data,width,height,border)
+            return self.qrimage(data,width,height,border,qrversion)
         img = Image.open("/tmp/qrcode.png").resize((width,height), Image.NEAREST).convert("RGBA")
 
         return img

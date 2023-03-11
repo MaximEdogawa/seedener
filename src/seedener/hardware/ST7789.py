@@ -20,7 +20,7 @@ class ST7789(object):
             self._bl = 18
             GPIO.setmode(GPIO.BCM)
 
-        elif GPIO.RPI_INFO['TYPE'] == "Zero" :
+        elif GPIO.RPI_INFO['TYPE'] == "Zero" or GPIO.RPI_INFO['TYPE'] == 'P1 1':
             self._rst = 13
             self._dc = 22
             self._bl = 18
