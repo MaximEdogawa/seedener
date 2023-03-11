@@ -113,7 +113,6 @@ class BundleExportQRDisplayView(View):
     def __init__(self, bundle_num: int):
         super().__init__()
         self.bundle = self.controller.get_bundle(bundle_num)
-        self.header_size = { 'mode':1, 'chunk': 7, 'chunks': 7}
         self.bundle_phrase: str= ''
         self.qr_density = self.settings.get_value(SettingsConstants.SETTING__QR_DENSITY)
         self.qr_type = QRType.BUNDLE__QR
