@@ -9,10 +9,13 @@ from binascii import hexlify
 from base64 import b32encode
 from textwrap import wrap
 
-import pyqrcodeng
+import hashlib
 import qrcode
-from seedener.models.settings import SettingsConstants 
+from seedener.models import QRType  
 
+from seedener.models.settings import SettingsConstants 
+# Hashing Const TODO: global const hashing rounds
+PBKDF2_ROUNDS = 2048
 
 @dataclass
 class BundleOptionsScreen(ButtonListScreen):
@@ -39,7 +42,8 @@ class BundleExportQrDisplayLoopScreen(BaseScreen):
         super().__post_init__()
         qrversion: int = 10
         content :str=''
-        header_size = { 'mode':1, 'chunk': 7, 'chunks': 7}
+        # Size of in bytes for each header section
+        header_size = {'mode': 1, 'chunk': 7, 'chunks': 7}
         
         total_size = len(self.bundle_phrase)
         chunk_size = qrversion * 34 - 17 - (4 * qrcode.constants.ERROR_CORRECT_L)
@@ -52,7 +56,6 @@ class BundleExportQrDisplayLoopScreen(BaseScreen):
         total_chunks = (total_size-1)//chunk_size + 1 
         header :bytes = { 'mode':1 , 'chunk': 0 , 'chunks':total_chunks }
         chunk = len(chunks_list)
-        
         payload : bytes= chunks_list[0].encode('utf-8')
         header['chunk'] = chunk
         data : bytes = b''.join([ header[k].to_bytes(header_size[k], 'big') for k in header ]) + payload
@@ -60,14 +63,38 @@ class BundleExportQrDisplayLoopScreen(BaseScreen):
         
         if(chunk==total_chunks):
             i=0
+            #TODO: Write hashing function that can be hashed with the same algorithm on the companion app
+            # Generate hash of spend bundle data and append it on content end
+            #chunk_hash: bytes = None
+            #try:
+            #    chunk_hash = hashlib.pbkdf2_hmac('sha512', bytes(self.bundle_phrase,'utf-8'), bytes('','utf-8'), PBKDF2_ROUNDS, 64)
+            #except Exception as e:
+            #    print(repr(e))  
+            #header['mode'] = 1; 
+            #header['chunk'] = 1;
+            #header['chunks'] = 1;
+            #data : bytes = b''.join([ header[k].to_bytes(header_size[k], 'big') for k in header ]) + chunk_hash
+            #hashContent = b32encode(data).decode('ascii').replace('=', '%')
+            #qr_encoder = EncodeQR(
+            #    key_phrase=hashContent,  
+            #    qr_type= self.qr_type, 
+            #    qr_density=self.qr_density,
+            #    chunk_size=chunk_total_size
+            #)
+            #QRDisplayScreen(qr_encoder=qr_encoder).display()
+
+            #TODO: Review code for safety of qr loop data transfer
+            header['mode'] = 0; 
+            header['chunk'] = 0;
+            header['chunks'] = total_chunks;
             while i < total_chunks :
                 payload : bytes= chunks_list[i].encode('utf-8')
                 chunk = i+1
                 header['chunk'] = chunk
                 data : bytes = b''.join([ header[k].to_bytes(header_size[k], 'big') for k in header ]) + payload
                 content += b32encode(data).decode('ascii').replace('=', '%')
-                i+= 1     
-            
+                i+= 1
+               
             qr_encoder = EncodeQR(
                 key_phrase=content,  
                 qr_type=self.qr_type, 
