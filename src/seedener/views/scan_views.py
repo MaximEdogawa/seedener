@@ -44,13 +44,12 @@ class ScanView(View):
                     self.controller.bundleStore.set_pending_bundle(
                             Bundle(unsigned_bundle=spendBundle)
                     )
-                    if self.decoder.get_spend_bundle_hash()==self.controller.bundleStore.get_pending_bundle().get_unsigned_bundle_hash():
-                        self.controller.bundleStore.finalize_pending_bundle()
-                        #TODO: Implement Signing Screen for Spend Bundles
-                        from seedener.views.bundle_views import BundleMenuView
-                        return Destination(BundleMenuView)
-                    else:
-                        return Destination(NotYetImplementedView) 
+                    # Disabled hash check! TODO: Write a better implementation for hash check on seedener side and seedsaver_wallet.
+                    self.controller.bundleStore.finalize_pending_bundle()
+                    #TODO: Implement Signing Screen for Spend Bundles
+                    from seedener.views.bundle_views import BundleMenuView
+                    return Destination(BundleMenuView)
+                    
             elif self.decoder.is_encrypted_key:
                 encrypted_key = self.decoder.get_encrypted_key_phrase()
                 if not encrypted_key:
