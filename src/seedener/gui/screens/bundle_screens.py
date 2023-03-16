@@ -43,7 +43,7 @@ class BundleExportQrDisplayLoopScreen(BaseScreen):
         qrversion: int = 10
         content :str=''
         # Size of in bytes for each header section
-        header_size = {'mode': 1, 'chunk': 7, 'chunks': 7}
+        header_size = { QRType.QR_SEQUENCE_MODE: 1 , QRType.BUNDLE_CHUNK: QRType.HEADER_SIZE , QRType.BUNDLE_TOTAL_CHUNKS: QRType.HEADER_SIZE}
         
         total_size = len(self.bundle_phrase)
         chunk_size = qrversion * 34 - 17 - (4 * qrcode.constants.ERROR_CORRECT_L)
@@ -54,7 +54,7 @@ class BundleExportQrDisplayLoopScreen(BaseScreen):
         
         chunks_list = wrap(self.bundle_phrase, chunk_size)
         total_chunks = (total_size-1)//chunk_size + 1 
-        header :bytes = { 'mode':1 , 'chunk': 0 , 'chunks':total_chunks }
+        header :bytes = { 'mode':QRType.MODE_CHUNK , 'chunk': 1 , 'chunks':total_chunks }
         chunk = len(chunks_list)
         payload : bytes= chunks_list[0].encode('utf-8')
         header['chunk'] = chunk
@@ -62,7 +62,6 @@ class BundleExportQrDisplayLoopScreen(BaseScreen):
         chunk_total_size = len(b32encode(data).decode('ascii').replace('=', '%'))
         
         if(chunk==total_chunks):
-            i=0
             #TODO: Write hashing function that can be hashed with the same algorithm on the companion app
             # Generate hash of spend bundle data and append it on content end
             #chunk_hash: bytes = None
@@ -84,13 +83,14 @@ class BundleExportQrDisplayLoopScreen(BaseScreen):
             #QRDisplayScreen(qr_encoder=qr_encoder).display()
 
             #TODO: Review code for safety of qr loop data transfer
-            header['mode'] = 0; 
-            header['chunk'] = 0;
-            header['chunks'] = total_chunks;
+            i=0
+            header[QRType.QR_SEQUENCE_MODE] = QRType.MODE_CHUNK; 
+            header[QRType.BUNDLE_CHUNK] = 1;
+            header[QRType.BUNDLE_TOTAL_CHUNKS] = total_chunks;
             while i < total_chunks :
                 payload : bytes= chunks_list[i].encode('utf-8')
                 chunk = i+1
-                header['chunk'] = chunk
+                header[QRType.BUNDLE_CHUNK] = chunk
                 data : bytes = b''.join([ header[k].to_bytes(header_size[k], 'big') for k in header ]) + payload
                 content += b32encode(data).decode('ascii').replace('=', '%')
                 i+= 1

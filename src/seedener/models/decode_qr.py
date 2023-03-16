@@ -128,7 +128,7 @@ class DecodeQR:
         content = b32decode(data.decode('ascii').replace('%', '=').encode('ascii'))
         cursor = 0
         header = {}
-        header_size = { QRType.QR_SEQUENCE_MODE: 1 , QRType.BUNDLE_CHUNK: 7 , QRType.BUNDLE_TOTAL_CHUNKS: 7}
+        header_size = { QRType.QR_SEQUENCE_MODE: 1 , QRType.BUNDLE_CHUNK: QRType.HEADER_SIZE , QRType.BUNDLE_TOTAL_CHUNKS: QRType.HEADER_SIZE}
         for k,size in header_size.items():
             header[k] = int.from_bytes(content[cursor:cursor+size], 'big')
             cursor += size
