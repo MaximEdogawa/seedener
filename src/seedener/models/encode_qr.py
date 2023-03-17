@@ -1,7 +1,6 @@
-import math
 from dataclasses import dataclass
 from seedener.helpers.qr import QR 
-from seedener.models import Key, QRType  
+from seedener.models import QRType  
 from seedener.models.settings import SettingsConstants 
 
 @dataclass

@@ -9,6 +9,7 @@ class QRType:
     SECRECT_COMPONENT = "se1"
     ENCRYPTED_KEY="Salted__"
     QR_SEQUENCE_MODE = 'mode'
+    HEADER_SIZE = 2
     MODE_HASH = 2
     MODE_CHUNK = 1
     BUNDLE_CHUNK = 'chunk'

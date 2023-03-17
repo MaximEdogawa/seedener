@@ -128,7 +128,7 @@ class DecodeQR:
         content = b32decode(data.decode('ascii').replace('%', '=').encode('ascii'))
         cursor = 0
         header = {}
-        header_size = { QRType.QR_SEQUENCE_MODE: 1 , QRType.BUNDLE_CHUNK: 7 , QRType.BUNDLE_TOTAL_CHUNKS: 7}
+        header_size = { QRType.QR_SEQUENCE_MODE: 1 , QRType.BUNDLE_CHUNK: QRType.HEADER_SIZE , QRType.BUNDLE_TOTAL_CHUNKS: QRType.HEADER_SIZE}
         for k,size in header_size.items():
             header[k] = int.from_bytes(content[cursor:cursor+size], 'big')
             cursor += size
@@ -315,7 +315,8 @@ class BundleQrDecoder(BaseQrDecoder):
                         self.spend_bundle[chunk_index] = payload
                         self.collected_segments=self.collected_segments+1 
                         #print("Added "+ str(self.collected_segments) +" of "+ str(self.total_segments)+" Chunks")
-
+                        
+                #TODO: Currently disabled hash check for companion app. Find a way to securely transfer hash from app   
                 elif header[QRType.QR_SEQUENCE_MODE]==QRType.MODE_HASH:
                     if type(payload) == str:
                         payload = payload.encode('utf-8')
@@ -326,7 +327,7 @@ class BundleQrDecoder(BaseQrDecoder):
             except Exception as e:
                 return DecodeQRStatus.INVALID
 
-            if(self.collected_segments==self.total_segments and self.spend_bundle_hash !=''):
+            if(self.collected_segments==self.total_segments):
                 self.complete = True
                 print("Chunks Complete!")
                 return DecodeQRStatus.COMPLETE
@@ -334,10 +335,11 @@ class BundleQrDecoder(BaseQrDecoder):
     def get_spend_bundle(self):
         if self.complete:
             bundle_str: str=''
-            bundle_len = len(self.spend_bundle[:])-1
-            while(bundle_len >= 0):
-                bundle_str+=self.spend_bundle[bundle_len]
-                bundle_len -= 1
+            i=0
+            for x in self.spend_bundle:
+                bundle_str+=self.spend_bundle[i]
+                i=i+1
+            
             return bundle_str
         return []
     
