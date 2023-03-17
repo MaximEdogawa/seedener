@@ -115,6 +115,10 @@ sudo nano /etc/systemd/system/seedener.service
 ### Configure Spi and Camera for Raspberry pi 4 and Compute
 Add this to lines on the end of /boot/config.txt
 ```
+#Enable usb dongle
+dtoverlay=dwc2
+```
+```
 #spi connect
 dtoverlay=spi0-hw-cs
 ```
