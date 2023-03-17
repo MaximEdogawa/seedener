@@ -5,15 +5,15 @@ import RPi.GPIO as GPIO
 from PIL import Image
 from seedener.models import Singleton
 from seedener.models.settings import SettingsConstants
+import sys
+is_64bits = sys.maxsize > 2**32
 
-
-if GPIO.RPI_INFO['P1_REVISION'] == 3:
-    from seedener.hardware.pivideostreamLegacy import PiVideoStream
-    from picamera import PiCamera as picamera
-else:
+if is_64bits:
     from seedener.hardware.pivideostream import PiVideoStream 
     from picamera2 import Picamera2 as picamera
-
+else:
+   from seedener.hardware.pivideostreamLegacy import PiVideoStream
+   from picamera import PiCamera as picamera 
 
 class Camera(Singleton):
     _video_stream = None
