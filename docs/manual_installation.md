@@ -140,6 +140,10 @@ Add `dtoverlay=dwc2` to the end of `config.txt`. Exit and save changes (CTRL-X, 
 ```
 blah blah rootwait modules-load=dwc2,g_ether [possibly more blah]
 ```
+Enable ssh
+```
+sudo touch /boot/ssh
+```
 
 ### Configure 'systemd' to run Seedener at boot:
 Open new seedener.service file
