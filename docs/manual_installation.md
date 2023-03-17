@@ -64,7 +64,9 @@ passwd
 
 ### Install dependencies
 ```
-sudo apt-get update && sudo apt-get install build-essential python3 python3-wheel python3-pip python3-venv python3-opencv git cmake zbar-tools libssl-dev libcap-dev libatlas-base-dev qrencode
+sudo apt update
+sudo apt upgrade 
+sudo apt install build-essential python3 python3-wheel python3-pip python3-venv python3-opencv git cmake zbar-tools libssl-dev libcap-dev libatlas-base-dev qrencode
 ```
 ### Install Rust
 ```
