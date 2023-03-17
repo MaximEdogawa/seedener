@@ -126,6 +126,18 @@ dtoverlay=spi0-hw-cs
 #camera connect
 dtoverlay=ov5647
 ```
+Now we have some incomprehensible configuration steps to set up the internet access relay.
+
+Edit `config.txt`:
+```
+# mac/Linux:
+nano config.txt
+
+# Windows:
+notepad config.txt
+```
+
+Add `dtoverlay=dwc2` to the end of `config.txt`. Exit and save changes (CTRL-X, then "y" in nano).
 ### Configure 'systemd' to run Seedener at boot:
 Open new seedener.service file
 ```
