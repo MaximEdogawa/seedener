@@ -136,8 +136,11 @@ nano config.txt
 # Windows:
 notepad config.txt
 ```
-
 Add `dtoverlay=dwc2` to the end of `config.txt`. Exit and save changes (CTRL-X, then "y" in nano).
+```
+blah blah rootwait modules-load=dwc2,g_ether [possibly more blah]
+```
+
 ### Configure 'systemd' to run Seedener at boot:
 Open new seedener.service file
 ```
