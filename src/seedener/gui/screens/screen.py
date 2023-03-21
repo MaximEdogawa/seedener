@@ -124,7 +124,7 @@ class LoadingScreenThread(BaseThread):
     def run(self):
         renderer: Renderer = Renderer.get_instance()
 
-        center_image = load_image("chia_logo_60x60.png")
+        center_image = load_image("seedsaver_sign_green_60x60.png")
         orbit_gap = 2*GUIConstants.COMPONENT_PADDING
         bounding_box = (
             int((renderer.canvas_width - center_image.width)/2 - orbit_gap),
