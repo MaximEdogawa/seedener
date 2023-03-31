@@ -15,7 +15,7 @@ from seedener.models.settings_definition import SettingsConstants
 class LogoScreen(BaseScreen):
     def __init__(self):
         super().__init__()
-        self.logo = load_image("seedsaver_sign_green.png")
+        self.logo = load_image("seedsaver_sign_green_240x240.png")
 
         self.partners = [
             "maximedogawa",
