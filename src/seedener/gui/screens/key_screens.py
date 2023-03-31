@@ -85,13 +85,22 @@ class KeyExportScreen(WarningEdgesMixin, ButtonListScreen):
                 radius=5 * supersampling_factor
             )
             baseline_y = number_box_y + number_box_height - int((number_box_height - number_height)/2)
-            draw.text(
-                (number_box_x + int(number_box_width/2), baseline_y),
-                font=number_font,
-                text=str(self.page_index * words_per_page + index + 1),
-                fill="#0084ff",
-                anchor="ms"  # Middle (centered), baSeline
-            )
+            if words_per_page == 1:
+                draw.text(
+                    (number_box_x + int(number_box_width/2), baseline_y),
+                    font=number_font,
+                    text=str(self.page_index * 4 + index + 1),
+                    fill="#0084ff",
+                    anchor="ms"  # Middle (centered), baSeline
+                )  
+            else:
+                draw.text(
+                    (number_box_x + int(number_box_width/2), baseline_y),
+                    font=number_font,
+                    text=str(self.page_index * words_per_page + index + 1),
+                    fill="#0084ff",
+                    anchor="ms"  # Middle (centered), baSeline
+                )
 
             # Now draw the word
             draw.text(
@@ -649,16 +658,12 @@ class KeyTranscribeKeyQRZoomedInScreen(BaseScreen):
         super().__post_init__()
 
         # Render an oversized QR code that we can view up close
-        self.pixels_per_block = 24
+        self.pixels_per_block = 37
 
         # Border must accommodate the 3 blocks outside the center 5x5 mask plus up to
-        # 1 empty block inside the 5x5 mask (29x29 has a 4-block final col/row).
-        self.qr_border = 4
-        if self.num_modules == 21:
-            # Optimize for 21x21
-            self.qr_blocks_per_zoom = 7
-        else:
-            self.qr_blocks_per_zoom = 5
+        # 1 empty block inside the 5x5 mask (33x33 has a 4-block final col/row).
+        self.qr_border = 3
+        self.qr_blocks_per_zoom = 7
 
         self.qr_width = (self.qr_border + self.num_modules + self.qr_border) * self.pixels_per_block
         self.height = self.qr_width
@@ -668,13 +673,14 @@ class KeyTranscribeKeyQRZoomedInScreen(BaseScreen):
             width=self.qr_width,
             height=self.height,
             border=self.qr_border,
-            style=QR.STYLE__ROUNDED
+            style=QR.STYLE__GRID
         ).convert("RGBA")
 
         # Render gridlines but leave the 1-block border as-is
         draw = ImageDraw.Draw(self.qr_image)
-        for i in range(self.qr_border, math.floor(self.qr_width/self.pixels_per_block) - self.qr_border):
-            draw.line((i * self.pixels_per_block, self.qr_border * self.pixels_per_block, i * self.pixels_per_block, self.height - self.qr_border * self.pixels_per_block), fill="#bbb")
+        
+        for i in range(self.qr_border, math.floor(self.qr_width/self.pixels_per_block)  - self.qr_border):
+            draw.line((i * self.pixels_per_block, self.qr_border * self.pixels_per_block , i* self.pixels_per_block, self.height  - self.qr_border * self.pixels_per_block), fill="#bbb")
             draw.line((self.qr_border * self.pixels_per_block, i * self.pixels_per_block, self.qr_width - self.qr_border * self.pixels_per_block, i * self.pixels_per_block), fill="#bbb")
 
         # Prep the semi-transparent mask overlay
@@ -684,8 +690,8 @@ class KeyTranscribeKeyQRZoomedInScreen(BaseScreen):
 
         self.mask_width = int((self.canvas_width - self.qr_blocks_per_zoom * self.pixels_per_block)/2)
         self.mask_height = int((self.canvas_height - self.qr_blocks_per_zoom * self.pixels_per_block)/2)
-        mask_rgba = (0, 0, 0, 226)
-        draw.rectangle((0, 0, self.canvas_width, self.mask_height), fill=mask_rgba)
+        mask_rgba = (0, 0, 0, 76)
+
         draw.rectangle((0, self.canvas_height - self.mask_height - 1, self.canvas_width, self.canvas_height), fill=mask_rgba)
         draw.rectangle((0, self.mask_height, self.mask_width, self.canvas_height - self.mask_height), fill=mask_rgba)
         draw.rectangle((self.canvas_width - self.mask_width - 1, self.mask_height, self.canvas_width, self.canvas_height - self.mask_height), fill=mask_rgba)
@@ -714,13 +720,14 @@ class KeyTranscribeKeyQRZoomedInScreen(BaseScreen):
 
     def draw_block_labels(self, cur_block_x, cur_block_y):
         # Create overlay for block labels (e.g. "D-5")
-        block_labels_x = ["1", "2", "3", "4", "5", "6"]
-        block_labels_y = ["A", "B", "C", "D", "E", "F"]
+        block_labels_x = ["1", "2", "3", "4", "5","6"]
+        block_labels_y = ["A", "B", "C", "D", "E","F"]
 
-        block_labels = Image.new("RGBA", (self.canvas_width, self.canvas_height), (255,255,255,0))
+        block_labels = Image.new("RGBA", (self.canvas_width, self.canvas_height),(255,255,255,0))
         draw = ImageDraw.Draw(block_labels)
-        draw.rectangle((self.mask_width, 0, self.canvas_width - self.mask_width, self.pixels_per_block), fill=GUIConstants.ACCENT_COLOR)
-        draw.rectangle((0, self.mask_height, self.pixels_per_block, self.canvas_height - self.mask_height), fill=GUIConstants.ACCENT_COLOR)
+        mask_rgba = (0, 0, 0, 76)
+        draw.rectangle((self.mask_width, 0, self.canvas_width - self.mask_width, self.pixels_per_block), fill=mask_rgba)
+        draw.rectangle((0, self.mask_height, self.pixels_per_block, self.canvas_height - self.mask_height), fill=mask_rgba)
 
         label_font = Fonts.get_font(GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME, GUIConstants.TOP_NAV_TITLE_FONT_SIZE + 8)
         x_label = block_labels_x[cur_block_x]
@@ -730,7 +737,7 @@ class KeyTranscribeKeyQRZoomedInScreen(BaseScreen):
         draw.text(
             (int(self.canvas_width/2), self.pixels_per_block - int((self.pixels_per_block - x_label_height)/2)),
             text=x_label,
-            fill=GUIConstants.BUTTON_SELECTED_FONT_COLOR,
+            fill=GUIConstants.CHIA_GREEN,
             font=label_font,
             anchor="ms",  # Middle, baSeline
         )
@@ -741,7 +748,7 @@ class KeyTranscribeKeyQRZoomedInScreen(BaseScreen):
         draw.text(
             (int(self.pixels_per_block/2), int((self.canvas_height + y_label_height) / 2)),
             text=y_label,
-            fill=GUIConstants.BUTTON_SELECTED_FONT_COLOR,
+            fill=GUIConstants.CHIA_GREEN,
             font=label_font,
             anchor="ms",  # Middle, baSeline
         )
