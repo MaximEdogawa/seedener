@@ -55,9 +55,7 @@ You can use Seedener to export your key to a hand-transcribed KeyQR format that 
 [More information about KeyQRs](docs/key_qr/README.md)
 
 Standard KeyQR templates:
-* [24-word KeyQR template dots (33x33)](docs/key_qr/printable_templates/dots_33x33.pdf)
-* [24-word KeyQR template grid (33x33)](docs/key_qr/printable_templates/grid_33x33.pdf)
-* [24-word KeyQR template grid (33x33) fingerprint](docs/key_qr/printable_templates/grid_wfingerprint_21x21.pdf)
+* [KeyQR  grid (33x33) fingerprint](docs/key_qr/printable_templates/grid_wfingerprint_33x33.pdf)
 
 ---------------
 
