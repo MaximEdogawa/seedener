@@ -316,8 +316,8 @@ class KeyTranscribeKeyQRFormatView(View):
         self.key_num = key_num
 
     def run(self):
-        STANDARD = "Standard: 29x29"
-        num_modules_standard = 29
+        STANDARD = "Standard: 33x33"
+        num_modules_standard = 33
 
         button_data = [STANDARD]
 
@@ -345,7 +345,7 @@ class KeyTranscribeKeyQRFormatView(View):
             ) 
 
 class KeyTranscribeKeyQRWarningView(View):
-    def __init__(self, key_num: int, keyqr_format: str = QRType.KEY__KEYQR, num_modules: int = 29):
+    def __init__(self, key_num: int, keyqr_format: str = QRType.KEY__KEYQR, num_modules: int = 33):
         super().__init__()
         self.key_num = key_num
         self.keyqr_format = keyqr_format
@@ -455,7 +455,7 @@ class KeyTranscribeKeyQRZoomedInView(View):
         )
 
         data = e.next_part()
-        num_modules = 25
+        num_modules = 33
 
         key_screens.KeyTranscribeKeyQRZoomedInScreen( 
             qr_data=data,

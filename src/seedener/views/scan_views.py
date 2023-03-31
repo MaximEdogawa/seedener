@@ -78,12 +78,11 @@ class ScanView(View):
                             self.controller.inMemoryStore.set_pending_key(
                                 Key(priv_key=decoded_key_phrase)
                             )
-                            if self.settings.get_value(SettingsConstants. SETTING__PRIVACY_WARNINGS) == SettingsConstants.OPTION__REQUIRED:
-                                from seedener.views.key_views import KeyWarningView
-                                return Destination(KeyWarningView)
-                            else:
-                                from seedener.views.key_views import  KeyFinalizeView
-                                return Destination(KeyFinalizeView)
+                            key = self.controller.inMemoryStore.get_pending_key()
+                            key.set_passphrase(ret)
+                            self.controller.inMemoryStore.finalize_pending_key()
+                            from seedener.views.key_views import KeysMenuView
+                            return Destination(KeysMenuView)
             else:
                 return Destination(NotYetImplementedView)
 
