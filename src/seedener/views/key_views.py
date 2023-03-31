@@ -337,8 +337,8 @@ class KeyTranscribeKeyQRFormatView(View):
                 KeyTranscribeKeyQRWarningView,
                 view_args={
                     "key_num": self.key_num,
-                    "keyqr_format": QRType.KEY__KEYQR,
-                    "num_modules": num_modules_standard,
+                    "keyqr_format": keyqr_format, 
+                    "num_modules": num_modules,
 
                 },
                 skip_current_view=True,

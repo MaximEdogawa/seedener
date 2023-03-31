@@ -16,7 +16,7 @@ class EncodeQR:
     passphrase: str = None
     derivation: str = None
     qr_type: str = None
-    qr_density: str = SettingsConstants.DENSITY__HIGH
+    qr_density: str = SettingsConstants.DENSITY__MEDIUM
     chunk_size: int = 0
 
     def __post_init__(self):
@@ -26,7 +26,7 @@ class EncodeQR:
             raise Exception('qr_type is required')
 
         if self.qr_density == None:
-            self.qr_density = SettingsConstants.DENSITY__HIGH
+            self.qr_density = SettingsConstants.DENSITY__MEDIUM
 
         self.encoder: BaseQrEncoder = None
 
@@ -34,7 +34,8 @@ class EncodeQR:
         if  self.qr_type == QRType.KEY__KEYQR:
             self.encoder = KeyQrEncoder(key_phrase=self.key_phrase)
         elif self.qr_type == QRType.BUNDLE__QR:
-            self.encoder = KeyQrEncoder(key_phrase=self.key_phrase,chunk_size=self.chunk_size)
+            self.qr_density = SettingsConstants.DENSITY__HIGH
+            self.encoder = BundleQrEncoder(key_phrase=self.key_phrase,chunk_size=self.chunk_size)
         else:
             raise Exception('QR Type not supported')
 
@@ -70,7 +71,7 @@ class BaseQrEncoder:
     def seq_len(self):
         raise Exception("Not implemented in child class")
 
-    def next_part(self) -> str:
+    def next_part(self):
         raise Exception("Not implemented in child class")
 
     def _create_parts(self):
@@ -79,14 +80,13 @@ class BaseQrEncoder:
     def get_is_complete(self):
         raise Exception("Not implemented in child class")
 
-class KeyQrEncoder(BaseQrEncoder):
+class BundleQrEncoder(BaseQrEncoder):
     def __init__(self, key_phrase: str, chunk_size: int=0 ):
         super().__init__()
         self.key_phrase = key_phrase
         self.chunk_size = chunk_size
         self.is_complete = None
         self.saved_key_phrase = key_phrase
-
 
     def seq_len(self):
         return 1
@@ -113,4 +113,18 @@ class KeyQrEncoder(BaseQrEncoder):
 
     def get_is_complete(self):
         return self.is_complete
-    
+
+class KeyQrEncoder(BaseQrEncoder):
+    def __init__(self, key_phrase: str):
+        super().__init__()
+        self.key_phrase = key_phrase
+
+    def seq_len(self):
+        return 1
+
+    def next_part(self):
+        return self.key_phrase.encode().decode('UTF-8')
+
+    @property
+    def is_complete(self):
+        return True

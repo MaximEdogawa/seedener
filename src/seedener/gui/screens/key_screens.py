@@ -653,12 +653,8 @@ class KeyTranscribeKeyQRZoomedInScreen(BaseScreen):
 
         # Border must accommodate the 3 blocks outside the center 5x5 mask plus up to
         # 1 empty block inside the 5x5 mask (29x29 has a 4-block final col/row).
-        self.qr_border = 4
-        if self.num_modules == 21:
-            # Optimize for 21x21
-            self.qr_blocks_per_zoom = 7
-        else:
-            self.qr_blocks_per_zoom = 5
+        self.qr_border = 3
+        self.qr_blocks_per_zoom = 5
 
         self.qr_width = (self.qr_border + self.num_modules + self.qr_border) * self.pixels_per_block
         self.height = self.qr_width
@@ -668,33 +664,38 @@ class KeyTranscribeKeyQRZoomedInScreen(BaseScreen):
             width=self.qr_width,
             height=self.height,
             border=self.qr_border,
-            style=QR.STYLE__ROUNDED
+            style=QR.STYLE__GRID
         ).convert("RGBA")
 
+        #TODO: Rewrite draw and calc of qr gride
         # Render gridlines but leave the 1-block border as-is
         draw = ImageDraw.Draw(self.qr_image)
-        for i in range(self.qr_border, math.floor(self.qr_width/self.pixels_per_block) - self.qr_border):
-            draw.line((i * self.pixels_per_block, self.qr_border * self.pixels_per_block, i * self.pixels_per_block, self.height - self.qr_border * self.pixels_per_block), fill="#bbb")
-            draw.line((self.qr_border * self.pixels_per_block, i * self.pixels_per_block, self.qr_width - self.qr_border * self.pixels_per_block, i * self.pixels_per_block), fill="#bbb")
+        for i in range(self.qr_border, 37 ):
+            draw.line((i * 19,  19 , i* 19, self.height  * 19), fill="#bbb")
+            draw.line(( 19, i * 19, self.qr_width - 19, i * 19), fill="#bbb")
+
+        #for i in range(self.qr_border, math.floor(self.qr_width/self.pixels_per_block)  - self.qr_border):
+            #draw.line((i * self.pixels_per_block, self.qr_border * self.pixels_per_block , i* self.pixels_per_block, self.height  - self.qr_border * self.pixels_per_block), fill="#bbb")
+            #draw.line((self.qr_border * self.pixels_per_block, i * self.pixels_per_block, self.qr_width - self.qr_border * self.pixels_per_block, i * self.pixels_per_block), fill="#bbb")
 
         # Prep the semi-transparent mask overlay
         # make a blank image for the overlay, initialized to transparent
         self.block_mask = Image.new("RGBA", (self.canvas_width, self.canvas_height), (255,255,255,0))
         draw = ImageDraw.Draw(self.block_mask)
 
-        self.mask_width = int((self.canvas_width - self.qr_blocks_per_zoom * self.pixels_per_block)/2)
-        self.mask_height = int((self.canvas_height - self.qr_blocks_per_zoom * self.pixels_per_block)/2)
+        self.mask_width = int((self.canvas_width - (7 * 19))/2)
+        self.mask_height = int((self.canvas_height - (7 * 19))/2)
         mask_rgba = (0, 0, 0, 226)
-        draw.rectangle((0, 0, self.canvas_width, self.mask_height), fill=mask_rgba)
-        draw.rectangle((0, self.canvas_height - self.mask_height - 1, self.canvas_width, self.canvas_height), fill=mask_rgba)
-        draw.rectangle((0, self.mask_height, self.mask_width, self.canvas_height - self.mask_height), fill=mask_rgba)
-        draw.rectangle((self.canvas_width - self.mask_width - 1, self.mask_height, self.canvas_width, self.canvas_height - self.mask_height), fill=mask_rgba)
+
+        #draw.rectangle((0, self.canvas_height - self.mask_height - 1, self.canvas_width, self.canvas_height), fill=mask_rgba)
+        #draw.rectangle((0, self.mask_height, self.mask_width, self.canvas_height - self.mask_height), fill=mask_rgba)
+        #draw.rectangle((self.canvas_width - self.mask_width - 1, self.mask_height, self.canvas_width, self.canvas_height - self.mask_height), fill=mask_rgba)
 
         # Draw a box around the cutout portion of the mask for better visibility
-        draw.line((self.mask_width, self.mask_height, self.mask_width, self.canvas_height - self.mask_height), fill=GUIConstants.ACCENT_COLOR)
-        draw.line((self.canvas_width - self.mask_width, self.mask_height, self.canvas_width - self.mask_width, self.canvas_height - self.mask_height), fill=GUIConstants.ACCENT_COLOR)
-        draw.line((self.mask_width, self.mask_height, self.canvas_width - self.mask_width, self.mask_height), fill=GUIConstants.ACCENT_COLOR)
-        draw.line((self.mask_width, self.canvas_height - self.mask_height, self.canvas_width - self.mask_width, self.canvas_height - self.mask_height), fill=GUIConstants.ACCENT_COLOR)
+        #draw.line((self.mask_width, self.mask_height, self.mask_width, self.canvas_height - self.mask_height), fill=GUIConstants.ACCENT_COLOR)
+        #draw.line((self.canvas_width - self.mask_width, self.mask_height, self.canvas_width - self.mask_width, self.canvas_height - self.mask_height), fill=GUIConstants.ACCENT_COLOR)
+        #draw.line((self.mask_width, self.mask_height, self.canvas_width - self.mask_width, self.mask_height), fill=GUIConstants.ACCENT_COLOR)
+        #draw.line((self.mask_width, self.canvas_height - self.mask_height, self.canvas_width - self.mask_width, self.canvas_height - self.mask_height), fill=GUIConstants.ACCENT_COLOR)
 
         msg = "click to exit"
         font = Fonts.get_font(GUIConstants.BODY_FONT_NAME, GUIConstants.BODY_FONT_SIZE)
