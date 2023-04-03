@@ -12,7 +12,7 @@ https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2
 
 Best practice is to verify the downloaded .zip file containing the Raspberry Pi Lite OS matches the published SHA256 hash of the file; for additional reference that hash for 32-bit os lite is: 9bf5234efbadd2d39769486e0a20923d8526a45eba57f74cda45ef78e2b628da.  After verifying the file's data integrity, you can decompress the .zip file to obtain the operating system image that it contains. You can then use Balena's Etcher tool (https://www.balena.io/etcher/) to write the Raspberry Pi Lite software image to a memory card (4 GB or larger). It's important to note that an image authoring tool must be used (the operating system image cannot be simply copied into a file storage partition on the memory card).
 
-The manual Seedener installation and configuration process requires an internet connection on the device to download the necessary libraries and code. But because the Pi Zero 1.3 does not have onboard wifi, you have two options:
+The manual Seedsaver-Sign installation and configuration process requires an internet connection on the device to download the necessary libraries and code. But because the Pi Zero 1.3 does not have onboard wifi, you have two options:
 
 1. Run these steps on a separate Raspberry Pi 2/3/4 or Zero W which can connect to the internet and then transfer the SD card to the Pi Zero 1.3 when complete.
 2. OR configure the Pi Zero 1.3 directly by relaying through your computer's internet connection over USB. See instructions [here](usb_relay.md).
