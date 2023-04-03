@@ -2,8 +2,9 @@ from seedener.gui.components import FontAwesomeIconConstants, SeedenerCustomIcon
 
 from .view import View, Destination, BackStackView, MainMenuView
 
-from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, settings_screens)
+from seedener.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, settings_screens, DireWarningScreen)
 from seedener.models.settings import SettingsConstants, SettingsDefinition
+from seedener.views.view import PowerOptionsView 
 
 class SettingsMenuView(View):
     def __init__(self, visibility: str = SettingsConstants.VISIBILITY__GENERAL, selected_attr: str = None, initial_scroll: int = 0):
@@ -18,6 +19,7 @@ class SettingsMenuView(View):
     def run(self):
         IO_TEST = "I/O test"
         DONATE = "Donate"
+        UPDATE = "Update"
 
         settings_entries = SettingsDefinition.get_settings_entries(
             visibiilty=self.visibility
@@ -40,6 +42,7 @@ class SettingsMenuView(View):
 
             button_data.append(IO_TEST)
             button_data.append(DONATE)
+            button_data.append(UPDATE)
 
         elif self.visibility == SettingsConstants.VISIBILITY__ADVANCED:
             title = "Advanced"
@@ -81,6 +84,8 @@ class SettingsMenuView(View):
 
         elif len(button_data) > selected_menu_num and button_data[selected_menu_num] == DONATE:
             return Destination(DonateView)
+        elif len(button_data) > selected_menu_num and button_data[selected_menu_num] == UPDATE:
+            return Destination(UpdateView)
         else:
             return Destination(SettingsEntryUpdateSelectionView, view_args=dict(attr_name=settings_entries[selected_menu_num].attr_name, parent_initial_scroll=initial_scroll))
 
@@ -190,3 +195,21 @@ class DonateView(View):
         settings_screens.DonateScreen().display()
 
         return Destination(SettingsMenuView)
+
+class UpdateView(View):
+    def run(self):
+        ret = DireWarningScreen( 
+            title="Caution",
+            status_headline="You will update to latest software version.",
+            text="Are you sure you want to update?",
+            button_data=["Yes I am sure!"],
+        ).display()
+
+        if ret == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+        else:
+            import os
+            os.system("cd ~/seedener && git pull --rebase")
+
+        return Destination(PowerOptionsView)
+
