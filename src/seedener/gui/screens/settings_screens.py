@@ -9,7 +9,9 @@ from seedener.gui.screens.screen import BaseScreen, BaseTopNavScreen, ButtonList
 from seedener.hardware.buttons import HardwareButtonsConstants
 from seedener.hardware.camera import Camera
 from seedener.models.settings import SettingsConstants
-
+from seedener.gui.screens.screen import QRDisplayScreen 
+from seedener.models.qr_type import QRType 
+from seedener.models.encode_qr import EncodeQR 
 
 @dataclass
 class SettingsEntryUpdateSelectionScreen(ButtonListScreen):
@@ -282,16 +284,49 @@ class DonateScreen(BaseTopNavScreen):
     def __post_init__(self):
         self.title = "Donate"
         super().__post_init__()
+        self.qr_encoder = EncodeQR(
+            key_phrase="xch1dv8hyhpclwgsz74a7g5lrpad4u0qap55yekg4yq25uwkvvfzhegq7qz7u3", 
+            qr_type=QRType.KEY__KEYQR,
+            qr_density=SettingsConstants.DENSITY__MEDIUM,
+        )
 
         self.components.append(TextArea(
-            text="Seedener is 100% free & open source. \n\n Please donate to MaximEdogawa.xch",
+            text="Seedsaver-Sign is 100% free & open source. Please donate to: ",
             screen_y=self.top_nav.height + 3*GUIConstants.COMPONENT_PADDING,
         ))
-
         self.components.append(TextArea(
-            text="https://github.com/MaximEdogawa/seedener",
-            font_size=GUIConstants.TOP_NAV_TITLE_FONT_SIZE + 8,
+            text="MaximEdogawa.xch",
             font_color=GUIConstants.ACCENT_COLOR,
+            font_size=GUIConstants.BODY_FONT_MAX_SIZE,
             supersampling_factor=1,
-            screen_y=self.components[-1].screen_y + self.components[-1].height + GUIConstants.COMPONENT_PADDING
+            screen_y=self.top_nav.height + 11*GUIConstants.COMPONENT_PADDING
         ))
+        # Hardware keys UI
+        font = Fonts.get_font(GUIConstants.BUTTON_FONT_NAME, GUIConstants.BUTTON_FONT_SIZE)
+        (left, top, text_width, bottom) = font.getbbox(text="Show QR Address", anchor="ls")
+        icon = Icon(
+            icon_name=FontAwesomeIconConstants.CAMERA, 
+            icon_size=GUIConstants.ICON_INLINE_FONT_SIZE,
+        )
+        key_button_width = text_width + 2*GUIConstants.COMPONENT_PADDING + GUIConstants.EDGE_PADDING
+        key_button_height = icon.height + int(1.5*GUIConstants.COMPONENT_PADDING)
+        key2_y = int(self.canvas_height/2) - int(key_button_height/2)
+        
+        self.key3_button = Button(
+            text="Show QR Address",
+            width=key_button_width,
+            height=key_button_height,
+            screen_x=self.canvas_width - key_button_width + GUIConstants.EDGE_PADDING,
+            screen_y=key2_y + 4*GUIConstants.COMPONENT_PADDING + key_button_height,
+            outline_color=GUIConstants.BACKGROUND_COLOR,
+        )
+        self.components.append(self.key3_button)
+        
+    def _run(self):
+        input = self.hw_inputs.wait_for(keys=HardwareButtonsConstants.ALL_KEYS, check_release=False)
+        if input == HardwareButtonsConstants.KEY3:
+            ret = QRDisplayScreen(qr_encoder=self.qr_encoder).display()  
+        
+        return  
+
+
