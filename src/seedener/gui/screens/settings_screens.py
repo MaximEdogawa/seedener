@@ -277,8 +277,6 @@ class IOTestScreen(BaseTopNavScreen):
 
             time.sleep(0.1)
 
-
-
 @dataclass
 class DonateScreen(BaseTopNavScreen):
     def __post_init__(self):

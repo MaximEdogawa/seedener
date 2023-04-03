@@ -211,5 +211,5 @@ class UpdateView(View):
             import os
             os.system("cd ~/seedener && git pull --rebase")
 
-        return Destination(PowerOptionsView)
+        return Destination(PowerOptionsView, clear_history=True)
 
