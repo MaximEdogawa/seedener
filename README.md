@@ -8,7 +8,7 @@ Seedner offers anyone the opportunity to build a verifiably air-gapped, stateles
 The goal of Seedener is to make Chia custody solution more accessible to users. By providing a user interface where they can easily create, transcribe and export Keys for signing Spend Bundles which are used for Chia custody solution vaults.
 
 # User guide info
-Multiple Keys are generated on Seedener device, pub KeyQRs are exported and a vault will be created on a companion app (Seedsaver). To withdraw from a vault a Spend Bundle has to be exported from the companion app via KeyQRLoop to the Seedener device and signed afterwards.
+Multiple Keys are generated on Seedener device, pub KeyQRs are exported and a vault will be created on a companion app [Seedsaver](https://github.com/MaximEdogawa/seedsaver_wallet) To withdraw from a vault a Spend Bundle has to be exported from the companion app via KeyQRLoop to the Seedener device and signed afterwards.
 
 ### Feature Highlights:
 * Create Keys for custody solution
