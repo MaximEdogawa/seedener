@@ -85,15 +85,8 @@ git checkout yourtargetbranch
 ```
 
 ### Setup a virtual environment
-64-bit version for libcamera (Only system site packages)
 ```
-python3 -m venv venv --system-site-packages
-source venv/bin/activate
-```
-
-32-bit version
-```
-python3 -m venv venv
+python3 -m venv venv 
 source venv/bin/activate
 ```
 
@@ -108,11 +101,6 @@ pip install -r requirements.txt
 pip install -r requirements_zero.txt
 ```
 Notice that it can take a long time to build blspy==1.0.14 and clvm_tools_rs==0.1.22 in rust & c on raspberry pi zero. Build it seperatly if you have problems. I could take hours to build!
-
-### Configure `systemd` to run Seedener at boot:
-```
-sudo nano /etc/systemd/system/seedener.service
-```
 
 ### Configure Spi and Camera for Raspberry pi 4 and Compute
 Add this to lines on the end of /boot/config.txt
